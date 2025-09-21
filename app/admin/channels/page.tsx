@@ -32,6 +32,7 @@ import {
 } from 'antd';
 import AntdSidebar from '@/components/admin/antd-sidebar';
 import QuestionnaireViewModal from '@/components/admin/questionnaire-view-modal';
+import ChannelQuestionnaireViewModal from '@/components/admin/channel-questionnaire-view-modal';
 import dayjs from 'dayjs';
 
 const { Header, Content, Footer } = Layout;
@@ -67,8 +68,10 @@ export default function ChannelsPage() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isQRModalVisible, setIsQRModalVisible] = useState(false);
   const [isQuestionnaireModalVisible, setIsQuestionnaireModalVisible] = useState(false);
+  const [isChannelQuestionnaireModalVisible, setIsChannelQuestionnaireModalVisible] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [selectedQuestionnaireId, setSelectedQuestionnaireId] = useState<string | null>(null);
+  const [selectedCustomerSelectedQuestions, setSelectedCustomerSelectedQuestions] = useState<any[]>([]);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
   const [form] = Form.useForm();
   const [searchParams, setSearchParams] = useState({
@@ -325,6 +328,16 @@ export default function ChannelsPage() {
     setIsQuestionnaireModalVisible(true);
   };
 
+  // 新增函数：查看渠道问卷详情（带用户选择）
+  const handleViewChannelQuestionnaire = (record: Channel) => {
+    setSelectedChannel(record);
+    setSelectedQuestionnaireId(record.questionnaireId || null);
+    // 这里应该从客户数据中获取用户选择的答案
+    // 由于渠道本身不直接关联客户数据，我们暂时传入空数组
+    setSelectedCustomerSelectedQuestions([]);
+    setIsChannelQuestionnaireModalVisible(true);
+  };
+
   const columns = [
     {
       title: '渠道编号',
@@ -406,9 +419,9 @@ export default function ChannelsPage() {
           {record.questionnaireId && (
             <Button 
               type="link" 
-              onClick={() => handleViewQuestionnaire(record.questionnaireId!)}
+              onClick={() => handleViewChannelQuestionnaire(record)}
             >
-              查看问卷
+              查看选题
             </Button>
           )}
         </Space>
@@ -513,7 +526,7 @@ export default function ChannelsPage() {
           </Form.Item>
           {/* 短链接字段 - 添加生成按钮 */}
           <Form.Item label="短链接">
-            <Input.Group compact>
+            <Space.Compact>
               <Form.Item
                 name="shortLink"
                 noStyle
@@ -539,7 +552,7 @@ export default function ChannelsPage() {
               >
                 生成
               </Button>
-            </Input.Group>
+            </Space.Compact>
           </Form.Item>
           <Form.Item 
             label="是否启用" 
@@ -601,6 +614,14 @@ export default function ChannelsPage() {
         open={isQuestionnaireModalVisible}
         onCancel={() => setIsQuestionnaireModalVisible(false)}
         questionnaireId={selectedQuestionnaireId || undefined}
+      />
+      
+      {/* 渠道问卷查看模态框（带用户选择） */}
+      <ChannelQuestionnaireViewModal
+        open={isChannelQuestionnaireModalVisible}
+        onCancel={() => setIsChannelQuestionnaireModalVisible(false)}
+        questionnaireId={selectedQuestionnaireId || undefined}
+        customerSelectedQuestions={selectedCustomerSelectedQuestions}
       />
     </Layout>
   );

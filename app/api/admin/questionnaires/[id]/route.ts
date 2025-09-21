@@ -3,9 +3,9 @@ import { db } from '@/libs/database/db';
 import { questionnaires } from '@/libs/database/schema';
 import { eq } from 'drizzle-orm';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     if (!id) {
       return NextResponse.json({ error: '缺少问卷ID' }, { status: 400 });

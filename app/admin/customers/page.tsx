@@ -30,6 +30,7 @@ import {
   Typography
 } from 'antd';
 import AntdSidebar from '@/components/admin/antd-sidebar';
+import CustomerQuestionViewModal from '@/components/admin/customer-question-view-modal';
 import { provinces, cities, districts } from '@/lib/china-division';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -86,6 +87,7 @@ export default function CustomersPage() {
   const [regionCascaderValue, setRegionCascaderValue] = useState<string[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isViewQuestionsModalVisible, setIsViewQuestionsModalVisible] = useState(false);
+  const [isCustomerQuestionModalVisible, setIsCustomerQuestionModalVisible] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
   const router = useRouter();
   
@@ -155,20 +157,25 @@ export default function CustomersPage() {
   }, []);
 
   // 处理级联选择器变化
-  const handleRegionChange = (value: string[]) => {
-    setRegionCascaderValue(value);
-    if (value.length > 0) {
-      setProvinceFilter(value[0] || '');
+  const handleRegionChange = (value: string[] | null) => {
+    // 确保value不为null或undefined
+    const safeValue = value || [];
+    setRegionCascaderValue(safeValue);
+    
+    if (safeValue.length > 0) {
+      setProvinceFilter(safeValue[0] || '');
     } else {
       setProvinceFilter('');
     }
-    if (value.length > 1) {
-      setCityFilter(value[1] || '');
+    
+    if (safeValue.length > 1) {
+      setCityFilter(safeValue[1] || '');
     } else {
       setCityFilter('');
     }
-    if (value.length > 2) {
-      setDistrictFilter(value[2] || '');
+    
+    if (safeValue.length > 2) {
+      setDistrictFilter(safeValue[2] || '');
     } else {
       setDistrictFilter('');
     }
@@ -339,61 +346,11 @@ export default function CustomersPage() {
       </Layout>
       
       {/* 查看选题模态框 */}
-      <Modal
-        title="用户选题详情"
+      <CustomerQuestionViewModal
+        customer={currentCustomer}
         open={isViewQuestionsModalVisible}
         onCancel={handleViewQuestionsModalClose}
-        footer={[
-          <Button key="close" onClick={handleViewQuestionsModalClose}>
-            关闭
-          </Button>
-        ]}
-        width={800}
-      >
-        {currentCustomer && (
-          <div>
-            <Descriptions title="客户信息" column={1} style={{ marginBottom: 24 }}>
-              <Descriptions.Item label="客户编号">{currentCustomer.customerNumber}</Descriptions.Item>
-              <Descriptions.Item label="客户名称">{currentCustomer.customerName}</Descriptions.Item>
-            </Descriptions>
-            
-            {currentCustomer.selectedQuestions && currentCustomer.selectedQuestions.length > 0 ? (
-              <div>
-                <Title level={5} style={{ marginBottom: 16 }}>选题详情</Title>
-                <List
-                  dataSource={currentCustomer.selectedQuestions}
-                  renderItem={(item) => (
-                    <List.Item>
-                      <Card 
-                        size="small" 
-                        style={{ width: '100%' }}
-                        title={item.questionTitle}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <Tag color={item.isCorrect ? 'success' : 'error'}>
-                              {item.isCorrect ? '正确' : '错误'}
-                            </Tag>
-                            <span style={{ marginLeft: 8 }}>用户选择: {item.selectedOptionText}</span>
-                          </div>
-                          {!item.isCorrect && item.correctOptionText && (
-                            <div>
-                              <span style={{ marginLeft: 8 }}>正确答案: {item.correctOptionText}</span>
-                            </div>
-                          )}
-                        </div>
-                      </Card>
-                    </List.Item>
-                  )}
-                />
-
-              </div>
-            ) : (
-              <Empty description="该客户暂未选择任何题目" />
-            )}
-          </div>
-        )}
-      </Modal>
+      />
     </Layout>
   );
 }
