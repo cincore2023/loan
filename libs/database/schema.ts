@@ -1,15 +1,6 @@
 import { pgTable, serial, text, timestamp, uuid, boolean, integer, jsonb } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
-// 产品表
-export const products = pgTable('products', {
-  id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
-  name: text('name').notNull(),
-  description: text('description'),
-  price: text('price').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
 // 管理员表
 export const admins = pgTable('admins', {
   id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
@@ -26,13 +17,11 @@ export type CustomerSelectedQuestion = {
   questionTitle: string;
   selectedOptionId: string;
   selectedOptionText: string;
-  isCorrect: boolean;
 };
 
 // 客户表
 export const customers = pgTable('customers', {
   id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
-  customerNumber: text('customer_number').notNull().unique(), // 客户编号
   customerName: text('customer_name').notNull(), // 客户名称
   applicationAmount: text('application_amount'), // 申请额度
   province: text('province'), // 省

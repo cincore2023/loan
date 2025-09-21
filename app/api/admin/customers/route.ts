@@ -1,10 +1,31 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/libs/database/db';
 import { customers, questionnaires } from '@/libs/database/schema';
 import { desc, like, and, gte, lte, eq, isNull, isNotNull, or } from 'drizzle-orm';
-import { parseISO } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
 
 // 删除模拟客户数据
+
+// 定义客户数据的验证模式
+const customerSchema = z.object({
+  customerName: z.string().min(1, '客户名称不能为空'),
+  applicationAmount: z.string().optional(),
+  province: z.string().optional(),
+  city: z.string().optional(),
+  district: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  idCard: z.string().optional(),
+  submissionTime: z.string().optional(),
+  questionnaireId: z.string().optional(),
+  selectedQuestions: z.array(z.object({
+    questionId: z.string(),
+    questionTitle: z.string(),
+    selectedOptionId: z.string(),
+    selectedOptionText: z.string(),
+  })).optional(),
+  channelLink: z.string().optional(),
+});
 
 export async function GET(request: Request) {
   try {
@@ -22,7 +43,6 @@ export async function GET(request: Request) {
     let query: any = db
       .select({
         id: customers.id,
-        customerNumber: customers.customerNumber,
         customerName: customers.customerName,
         applicationAmount: customers.applicationAmount,
         province: customers.province,
@@ -107,5 +127,91 @@ export async function GET(request: Request) {
       { error: '获取客户数据失败' },
       { status: 500 }
     );
+  }
+}
+
+// 创建客户数据
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    
+    // 验证请求数据
+    const validatedData = customerSchema.parse(body);
+    
+    // 创建新客户
+    const newCustomer = await db.insert(customers).values({
+      id: uuidv4(),
+      customerName: validatedData.customerName,
+      applicationAmount: validatedData.applicationAmount,
+      province: validatedData.province,
+      city: validatedData.city,
+      district: validatedData.district,
+      phoneNumber: validatedData.phoneNumber,
+      idCard: validatedData.idCard,
+      submissionTime: validatedData.submissionTime ? new Date(validatedData.submissionTime) : new Date(),
+      questionnaireId: validatedData.questionnaireId,
+      selectedQuestions: validatedData.selectedQuestions || [],
+      channelLink: validatedData.channelLink,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    
+    return NextResponse.json(newCustomer[0], { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: '验证失败', details: error.issues }, { status: 400 });
+    }
+    
+    console.error('创建客户数据失败:', error);
+    return NextResponse.json({ error: '创建客户数据失败' }, { status: 500 });
+  }
+}
+
+// 更新客户数据
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    
+    if (!body.id) {
+      return NextResponse.json({ error: '客户ID不能为空' }, { status: 400 });
+    }
+    
+    // 验证请求数据
+    const validatedData = customerSchema.parse({
+      ...body,
+      customerName: body.customerName || undefined,
+    });
+    
+    // 检查客户是否存在
+    const existingCustomer = await db.select().from(customers).where(eq(customers.id, body.id)).limit(1);
+    
+    if (existingCustomer.length === 0) {
+      return NextResponse.json({ error: '客户不存在' }, { status: 404 });
+    }
+    
+    // 更新客户
+    const updatedCustomer = await db.update(customers).set({
+      customerName: validatedData.customerName || existingCustomer[0].customerName,
+      applicationAmount: validatedData.applicationAmount,
+      province: validatedData.province,
+      city: validatedData.city,
+      district: validatedData.district,
+      phoneNumber: validatedData.phoneNumber,
+      idCard: validatedData.idCard,
+      submissionTime: validatedData.submissionTime ? new Date(validatedData.submissionTime) : existingCustomer[0].submissionTime,
+      questionnaireId: validatedData.questionnaireId,
+      selectedQuestions: validatedData.selectedQuestions || [],
+      channelLink: validatedData.channelLink,
+      updatedAt: new Date(),
+    }).where(eq(customers.id, body.id)).returning();
+    
+    return NextResponse.json(updatedCustomer[0]);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: '验证失败', details: error.issues }, { status: 400 });
+    }
+    
+    console.error('更新客户数据失败:', error);
+    return NextResponse.json({ error: '更新客户数据失败' }, { status: 500 });
   }
 }

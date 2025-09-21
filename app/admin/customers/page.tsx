@@ -41,7 +41,6 @@ interface CascaderOption {
 
 interface Customer {
   id: string;
-  customerNumber: string;
   customerName: string;
   applicationAmount: string | null;
   province: string | null;
@@ -63,9 +62,6 @@ interface CustomerSelectedQuestion {
   questionTitle: string;
   selectedOptionId: string;
   selectedOptionText: string;
-  isCorrect: boolean;
-  correctOptionId?: string;
-  correctOptionText?: string;
 }
 
 export default function CustomersPage() {

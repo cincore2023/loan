@@ -44,14 +44,10 @@ interface CustomerSelectedQuestion {
   questionTitle: string;
   selectedOptionId: string;
   selectedOptionText: string;
-  isCorrect: boolean;
-  correctOptionId?: string;
-  correctOptionText?: string;
 }
 
 interface Customer {
   id: string;
-  customerNumber: string;
   customerName: string;
   applicationAmount: string | null;
   province: string | null;
@@ -124,7 +120,6 @@ export default function CustomerQuestionViewModal({
         {customer && (
           <div>
             <Descriptions title="客户信息" column={2} style={{ marginBottom: 24 }}>
-              <Descriptions.Item label="客户编号">{customer.customerNumber}</Descriptions.Item>
               <Descriptions.Item label="客户名称">{customer.customerName}</Descriptions.Item>
               <Descriptions.Item label="申请额度">{customer.applicationAmount ? `¥${customer.applicationAmount}` : '未填写'}</Descriptions.Item>
               <Descriptions.Item label="所属地区">
@@ -187,13 +182,7 @@ export default function CustomerQuestionViewModal({
                             
                             {userSelection && (
                               <div style={{ marginBottom: 10 }}>
-                                <Tag color={userSelection.isCorrect ? 'success' : 'error'}>
-                                  {userSelection.isCorrect ? '正确' : '错误'}
-                                </Tag>
                                 <span style={{ marginLeft: 8 }}>客户选择: {userSelection.selectedOptionText}</span>
-                                {!userSelection.isCorrect && userSelection.correctOptionText && (
-                                  <span style={{ marginLeft: 8 }}>正确答案: {userSelection.correctOptionText}</span>
-                                )}
                               </div>
                             )}
                             
@@ -236,18 +225,8 @@ export default function CustomerQuestionViewModal({
                         style={{ width: '100%' }}
                         title={item.questionTitle}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <Tag color={item.isCorrect ? 'success' : 'error'}>
-                              {item.isCorrect ? '正确' : '错误'}
-                            </Tag>
-                            <span style={{ marginLeft: 8 }}>客户选择: {item.selectedOptionText}</span>
-                          </div>
-                          {!item.isCorrect && item.correctOptionText && (
-                            <div>
-                              <span style={{ marginLeft: 8 }}>正确答案: {item.correctOptionText}</span>
-                            </div>
-                          )}
+                        <div>
+                          <span style={{ marginLeft: 8 }}>客户选择: {item.selectedOptionText}</span>
                         </div>
                       </Card>
                     </List.Item>
