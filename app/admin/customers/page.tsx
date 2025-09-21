@@ -4,8 +4,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   UsergroupAddOutlined,
-  PlusOutlined,
-  EditOutlined,
   EyeOutlined,
   SearchOutlined
 } from '@ant-design/icons';
@@ -31,10 +29,10 @@ import {
   Empty,
   Typography
 } from 'antd';
-import type { CascaderProps } from 'antd';
 import AntdSidebar from '@/components/admin/antd-sidebar';
 import { provinces, cities, districts } from '@/lib/china-division';
 import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { RangePicker } = DatePicker;
@@ -63,6 +61,7 @@ interface Customer {
   createdAt: string;
   updatedAt: string;
   selectedQuestions?: CustomerSelectedQuestion[] | null;
+  questionnaireName?: string | null;
 }
 
 // 用户选择的题目和答案类型
@@ -293,11 +292,6 @@ export default function CustomersPage() {
 
   const columns = [
     {
-      title: '客户编号',
-      dataIndex: 'customerNumber',
-      key: 'customerNumber',
-    },
-    {
       title: '客户名称',
       dataIndex: 'customerName',
       key: 'customerName',
@@ -330,7 +324,7 @@ export default function CustomersPage() {
       dataIndex: 'idCard',
       key: 'idCard',
       render: (idCard: string | null) => 
-        idCard ? `${idCard.substring(0, 6)}****${idCard.substring(idCard.length - 4)}` : '未填写',
+        idCard ? idCard : '未填写',
     },
     {
       title: '渠道',
@@ -339,11 +333,17 @@ export default function CustomersPage() {
       render: (channel: string | null) => channel || '未填写',
     },
     {
+      title: '问卷名称',
+      dataIndex: 'questionnaireName',
+      key: 'questionnaireName',
+      render: (name: string | null) => name || '未填写',
+    },
+    {
       title: '提交时间',
       dataIndex: 'submissionTime',
       key: 'submissionTime',
       render: (time: string | null) => 
-        time ? new Date(time).toLocaleDateString() : '未填写',
+        time ? dayjs(time).format('YYYY-MM-DD HH:mm:ss') : '未填写',
     },
     {
       title: '操作',
