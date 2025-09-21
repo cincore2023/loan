@@ -1,62 +1,105 @@
 import { NextResponse } from 'next/server';
+import { db } from '@/libs/database/db';
+import { customers, questionnaires } from '@/libs/database/schema';
+import { desc, like, and, gte, lte, eq, isNull, isNotNull, or } from 'drizzle-orm';
+import { parseISO } from 'date-fns';
 
-// 模拟客户数据
-const mockCustomers = [
-  {
-    id: '1',
-    customerNumber: 'CUST001',
-    customerName: '张三',
-    applicationAmount: '50000',
-    province: '北京市',
-    city: '北京市',
-    district: '朝阳区',
-    phoneNumber: '13800138000',
-    idCard: '110101199001011234',
-    submissionTime: '2023-05-15T10:30:00Z',
-    channelLink: '渠道A',
-    createdAt: '2023-05-15T10:30:00Z',
-    updatedAt: '2023-05-15T10:30:00Z'
-  },
-  {
-    id: '2',
-    customerNumber: 'CUST002',
-    customerName: '李四',
-    applicationAmount: '80000',
-    province: '上海市',
-    city: '上海市',
-    district: '浦东新区',
-    phoneNumber: '13900139000',
-    idCard: '310101199002021234',
-    submissionTime: '2023-05-16T14:45:00Z',
-    channelLink: '渠道B',
-    createdAt: '2023-05-16T14:45:00Z',
-    updatedAt: '2023-05-16T14:45:00Z'
-  },
-  {
-    id: '3',
-    customerNumber: 'CUST003',
-    customerName: '王五',
-    applicationAmount: '120000',
-    province: '广东省',
-    city: '深圳市',
-    district: '南山区',
-    phoneNumber: '13700137000',
-    idCard: '440101199003031234',
-    submissionTime: '2023-05-17T09:15:00Z',
-    channelLink: '渠道C',
-    createdAt: '2023-05-17T09:15:00Z',
-    updatedAt: '2023-05-17T09:15:00Z'
-  }
-];
+// 删除模拟客户数据
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // 模拟数据库查询延迟
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search') || '';
+    const province = searchParams.get('province') || '';
+    const city = searchParams.get('city') || '';
+    const district = searchParams.get('district') || '';
+    const startDate = searchParams.get('startDate') || '';
+    const endDate = searchParams.get('endDate') || '';
+    
+    console.log('API Parameters:', { search, province, city, district, startDate, endDate });
+    
+    // 构建查询条件
+    let query: any = db
+      .select({
+        id: customers.id,
+        customerNumber: customers.customerNumber,
+        customerName: customers.customerName,
+        applicationAmount: customers.applicationAmount,
+        province: customers.province,
+        city: customers.city,
+        district: customers.district,
+        phoneNumber: customers.phoneNumber,
+        idCard: customers.idCard,
+        submissionTime: customers.submissionTime,
+        channelLink: customers.channelLink,
+        createdAt: customers.createdAt,
+        updatedAt: customers.updatedAt,
+        selectedQuestions: customers.selectedQuestions,
+        questionnaireName: questionnaires.questionnaireName
+      })
+      .from(customers)
+      .leftJoin(questionnaires, eq(customers.questionnaireId, questionnaires.id));
+    
+    // 构建所有条件
+    const whereConditions = [];
+    
+    // 搜索条件使用OR逻辑
+    if (search) {
+      whereConditions.push(or(
+        like(customers.customerName, `%${search}%`),
+        like(customers.phoneNumber, `%${search}%`),
+        like(customers.idCard, `%${search}%`),
+        like(customers.channelLink, `%${search}%`)
+      ));
+    }
+    
+    // 地域筛选条件使用AND逻辑
+    if (province) {
+      whereConditions.push(like(customers.province, `%${province}%`));
+    }
+    
+    if (city) {
+      whereConditions.push(like(customers.city, `%${city}%`));
+    }
+    
+    if (district) {
+      whereConditions.push(like(customers.district, `%${district}%`));
+    }
+    
+    // 时间范围筛选条件使用AND逻辑
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      
+      whereConditions.push(
+        gte(customers.submissionTime, start),
+        lte(customers.submissionTime, end)
+      );
+    } else if (startDate) {
+      const start = new Date(startDate);
+      whereConditions.push(gte(customers.submissionTime, start));
+    } else if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      whereConditions.push(lte(customers.submissionTime, end));
+    }
+    
+    // 应用所有条件
+    if (whereConditions.length > 0) {
+      query = query.where(and(...whereConditions));
+    }
+    
+    console.log('Query built successfully');
+    
+    // 添加排序（按创建时间倒序）
+    const customerList = await query.orderBy(desc(customers.createdAt));
+    
+    console.log('Customer list fetched:', customerList.length);
     
     return NextResponse.json({
-      customers: mockCustomers,
-      total: mockCustomers.length
+      customers: customerList,
+      total: customerList.length
     });
   } catch (error) {
     console.error('获取客户数据失败:', error);

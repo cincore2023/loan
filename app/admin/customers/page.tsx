@@ -96,90 +96,26 @@ export default function CustomersPage() {
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        // 模拟数据获取
-        const mockCustomers: Customer[] = [
-          {
-            id: '1',
-            customerNumber: 'CUST001',
-            customerName: '张三',
-            applicationAmount: '50000',
-            province: '北京市',
-            city: '北京市',
-            district: '朝阳区',
-            phoneNumber: '13800138000',
-            idCard: '110101199001011234',
-            submissionTime: '2023-05-15T10:30:00Z',
-            channelLink: '渠道A',
-            questionnaireName: '客户满意度调查', // 添加问卷名称
-            createdAt: '2023-05-15T10:30:00Z',
-            updatedAt: '2023-05-15T10:30:00Z',
-            selectedQuestions: [
-              {
-                questionId: 'q1',
-                questionTitle: '您最喜欢的贷款产品类型是什么？',
-                selectedOptionId: 'o1',
-                selectedOptionText: '个人消费贷款',
-                isCorrect: true,
-                correctOptionId: 'o1',
-                correctOptionText: '个人消费贷款'
-              },
-              {
-                questionId: 'q2',
-                questionTitle: '您希望的贷款期限是多长？',
-                selectedOptionId: 'o3',
-                selectedOptionText: '1-3年',
-                isCorrect: true,
-                correctOptionId: 'o3',
-                correctOptionText: '1-3年'
-              }
-            ]
-          },
-          {
-            id: '2',
-            customerNumber: 'CUST002',
-            customerName: '李四',
-            applicationAmount: '80000',
-            province: '上海市',
-            city: '上海市',
-            district: '浦东新区',
-            phoneNumber: '13900139000',
-            idCard: '310101199002021234',
-            submissionTime: '2023-05-16T14:45:00Z',
-            channelLink: '渠道B',
-            questionnaireName: '产品使用体验调查', // 添加问卷名称
-            createdAt: '2023-05-16T14:45:00Z',
-            updatedAt: '2023-05-16T14:45:00Z',
-            selectedQuestions: [
-              {
-                questionId: 'q1',
-                questionTitle: '您最喜欢的贷款产品类型是什么？',
-                selectedOptionId: 'o2',
-                selectedOptionText: '房屋抵押贷款',
-                isCorrect: false,
-                correctOptionId: 'o1',
-                correctOptionText: '个人消费贷款'
-              }
-            ]
-          },
-          {
-            id: '3',
-            customerNumber: 'CUST003',
-            customerName: '王五',
-            applicationAmount: '120000',
-            province: '广东省',
-            city: '深圳市',
-            district: '南山区',
-            phoneNumber: '13700137000',
-            idCard: '440101199003031234',
-            submissionTime: '2023-05-17T09:15:00Z',
-            channelLink: '渠道C',
-            questionnaireName: '贷款需求调研', // 添加问卷名称
-            createdAt: '2023-05-17T09:15:00Z',
-            updatedAt: '2023-05-17T09:15:00Z'
-          }
-        ];
+        setLoading(true);
         
-        setCustomers(mockCustomers);
+        // 构建查询参数
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('search', searchTerm);
+        if (provinceFilter) params.append('province', provinceFilter);
+        if (cityFilter) params.append('city', cityFilter);
+        if (districtFilter) params.append('district', districtFilter);
+        if (dateRange[0]) params.append('startDate', dateRange[0].format('YYYY-MM-DD'));
+        if (dateRange[1]) params.append('endDate', dateRange[1].format('YYYY-MM-DD'));
+        
+        // 调用真实的API获取客户数据
+        const response = await fetch(`/api/admin/customers?${params.toString()}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+          setCustomers(data.customers);
+        } else {
+          throw new Error(data.error || '获取客户数据失败');
+        }
       } catch (error) {
         console.error('获取客户数据失败:', error);
         message.error('获取客户数据时发生错误');
@@ -189,7 +125,7 @@ export default function CustomersPage() {
     };
 
     fetchCustomers();
-  }, []);
+  }, [searchTerm, provinceFilter, cityFilter, districtFilter, dateRange]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -237,44 +173,6 @@ export default function CustomersPage() {
       setDistrictFilter('');
     }
   };
-
-  // 筛选和搜索客户数据
-  const filteredCustomers = useMemo(() => {
-    return customers.filter(customer => {
-      // 模糊搜索：客户名称、手机号、身份证、渠道
-      const matchesSearch = 
-        !searchTerm ||
-        customer.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.phoneNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.idCard?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.channelLink?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      // 地域筛选
-      const matchesProvince = !provinceFilter || customer.province === provinceFilter;
-      const matchesCity = !cityFilter || customer.city === cityFilter;
-      const matchesDistrict = !districtFilter || customer.district === districtFilter;
-
-      // 提交时间筛选
-      let matchesDate = true;
-      if (dateRange[0] || dateRange[1]) {
-        if (customer.submissionTime) {
-          const submissionDate = new Date(customer.submissionTime);
-          
-          if (dateRange[0] && submissionDate < dateRange[0].toDate()) {
-            matchesDate = false;
-          }
-          
-          if (dateRange[1] && submissionDate > dateRange[1].toDate()) {
-            matchesDate = false;
-          }
-        } else {
-          matchesDate = false;
-        }
-      }
-
-      return matchesSearch && matchesProvince && matchesCity && matchesDistrict && matchesDate;
-    });
-  }, [customers, searchTerm, provinceFilter, cityFilter, districtFilter, dateRange]);
 
   const handleClearFilters = () => {
     setSearchTerm('');
@@ -422,7 +320,7 @@ export default function CustomersPage() {
               </Row>
               <Table
                 columns={columns}
-                dataSource={filteredCustomers}
+                dataSource={customers}
                 loading={loading}
                 pagination={{
                   pageSize: 10,
@@ -430,6 +328,7 @@ export default function CustomersPage() {
                   showQuickJumper: true,
                 }}
                 rowKey="id"
+                scroll={{ x: 'max-content' }}
               />
             </Card>
           </div>
