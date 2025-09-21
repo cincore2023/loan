@@ -31,6 +31,7 @@ import {
   QRCode
 } from 'antd';
 import AntdSidebar from '@/components/admin/antd-sidebar';
+import QuestionnaireViewModal from '@/components/admin/questionnaire-view-modal';
 import dayjs from 'dayjs';
 
 const { Header, Content, Footer } = Layout;
@@ -65,7 +66,9 @@ export default function ChannelsPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isQRModalVisible, setIsQRModalVisible] = useState(false);
+  const [isQuestionnaireModalVisible, setIsQuestionnaireModalVisible] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+  const [selectedQuestionnaireId, setSelectedQuestionnaireId] = useState<string | null>(null);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
   const [form] = Form.useForm();
   const [searchParams, setSearchParams] = useState({
@@ -317,6 +320,11 @@ export default function ChannelsPage() {
     }
   };
 
+  const handleViewQuestionnaire = (questionnaireId: string) => {
+    setSelectedQuestionnaireId(questionnaireId);
+    setIsQuestionnaireModalVisible(true);
+  };
+
   const columns = [
     {
       title: '渠道编号',
@@ -395,7 +403,14 @@ export default function ChannelsPage() {
         <Space size="middle">
           <Button type="link" onClick={() => handleEditChannel(record)}>编辑渠道</Button>
           <Button type="link" onClick={() => handleShowQRCode(record)}>下载二维码</Button>
-          <Button type="link" >查看问卷</Button>
+          {record.questionnaireId && (
+            <Button 
+              type="link" 
+              onClick={() => handleViewQuestionnaire(record.questionnaireId!)}
+            >
+              查看问卷
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -580,6 +595,13 @@ export default function ChannelsPage() {
           </div>
         )}
       </Modal>
+
+      {/* 问卷查看模态框 */}
+      <QuestionnaireViewModal
+        open={isQuestionnaireModalVisible}
+        onCancel={() => setIsQuestionnaireModalVisible(false)}
+        questionnaireId={selectedQuestionnaireId || undefined}
+      />
     </Layout>
   );
 }
