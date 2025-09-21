@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { 
   UsergroupAddOutlined,
   EyeOutlined,
@@ -20,13 +19,8 @@ import {
   Card,
   Row,
   Col,
-  Popconfirm,
   message,
   Cascader,
-  Modal,
-  List,
-  Descriptions,
-  Empty,
   Typography
 } from 'antd';
 import AntdSidebar from '@/components/admin/antd-sidebar';
@@ -37,8 +31,6 @@ import dayjs from 'dayjs';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { RangePicker } = DatePicker;
-const { Option } = Select;
-const { Title } = Typography;
 
 // 级联选择器选项类型
 interface CascaderOption {
@@ -87,9 +79,7 @@ export default function CustomersPage() {
   const [regionCascaderValue, setRegionCascaderValue] = useState<string[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isViewQuestionsModalVisible, setIsViewQuestionsModalVisible] = useState(false);
-  const [isCustomerQuestionModalVisible, setIsCustomerQuestionModalVisible] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
-  const router = useRouter();
   
   const {
     token: { colorBgContainer },
