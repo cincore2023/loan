@@ -1,14 +1,6 @@
 import { pgTable, serial, text, timestamp, uuid, boolean, integer, jsonb } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
-// 用户表
-export const users = pgTable('users', {
-  id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
 // 产品表
 export const products = pgTable('products', {
   id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
@@ -22,12 +14,20 @@ export const products = pgTable('products', {
 export const admins = pgTable('admins', {
   id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
   name: text('name').notNull(),
-  // 删除了 email 字段
   password: text('password').notNull(), // 在实际应用中应加密存储
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   lastLoginAt: timestamp('last_login_at'),
 });
+
+// 客户选择的题目和答案类型
+export type CustomerSelectedQuestion = {
+  questionId: string;
+  questionTitle: string;
+  selectedOptionId: string;
+  selectedOptionText: string;
+  isCorrect: boolean;
+};
 
 // 客户表
 export const customers = pgTable('customers', {
@@ -42,6 +42,7 @@ export const customers = pgTable('customers', {
   idCard: text('id_card'), // 身份证
   submissionTime: timestamp('submission_time'), // 提交时间
   questionnaireId: uuid('questionnaire_id').references(() => questionnaires.id), // 问卷id
+  selectedQuestions: jsonb('selected_questions').$type<CustomerSelectedQuestion[]>(), // 用户选择的题目和答案
   channelLink: text('channel_link'), // 渠道链接
   createdAt: timestamp('created_at').defaultNow().notNull(), // 创建时间
   updatedAt: timestamp('updated_at').defaultNow().notNull(), // 修改时间

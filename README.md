@@ -32,8 +32,8 @@
 - **框架**: Next.js 15
 - **数据库**: PostgreSQL + Drizzle ORM
 - **样式**: Tailwind CSS
-- **UI 组件库**: Radix UI
-- **图标库**: lucide-react
+- **UI 组件库**: Ant Design Pro
+- **图标库**: @ant-design/icons
 - **通知**: Sonner
 - **数据验证**: Zod
 - **ID 生成**: UUID
@@ -109,7 +109,6 @@
    - H5 应用: http://localhost:3000/h5
    - Admin 应用: http://localhost:3000/admin
    - API 接口: http://localhost:3000/api
-   - Radix UI 演示: http://localhost:3000/admin/demo
 
 ## 数据库操作
 
@@ -135,20 +134,23 @@
 
 ## Admin 管理后台
 
-Admin 管理后台包含登录页面和仪表板页面：
+Admin 管理后台包含登录页面和各个功能模块页面：
 
 - **登录页面**: http://localhost:3000/admin
-  - 使用 Radix UI 组件构建
-  - 使用 lucide-react 图标
-  - 默认用户名: admin
-  - 默认密码: admin123
+  - 使用 Ant Design Pro 组件构建
+  - 使用 @ant-design/icons 图标
 
-- **仪表板页面**: http://localhost:3000/admin/dashboard
-  - 登录成功后自动跳转
+- **客户资料页面**: http://localhost:3000/admin/customers
+  - 包含客户信息的增删改查功能
+  - 支持搜索、筛选和分页
 
-- **Radix UI 演示**: http://localhost:3000/admin/demo
-  - 展示了 Radix UI 组件的使用方法
-  - 使用 lucide-react 图标
+- **问卷设置页面**: http://localhost:3000/admin/questionnaires
+  - 包含问卷信息的增删改查功能
+  - 支持搜索、筛选和分页
+
+- **渠道管理页面**: http://localhost:3000/admin/channels
+  - 包含渠道信息的增删改查功能
+  - 支持搜索、筛选和分页
 
 ## Docker 部署
 
@@ -165,3 +167,12 @@ docker-compose up -d
 ```
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/loan_db
 ```
+
+## 更新日志
+
+### 2025-09-21
+- 移除了未使用的 Radix UI 组件，统一使用 Ant Design Pro 作为后台管理界面的 UI 组件库
+- 更新了登录页面，使用 Ant Design Pro 组件重构
+- 优化了客户资料页面的地域筛选功能，使用级联选择器替代原来的三个独立下拉框
+- 删除了重复的侧边栏组件，只保留 AntdSidebar 组件
+- 更新了 README 文档，反映了最新的技术栈和组件库使用情况
