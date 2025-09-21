@@ -82,6 +82,7 @@ export const channels = pgTable('channels', {
   questionnaireSubmitCount: integer('questionnaire_submit_count').default(0), // 问卷填写总数
   remark: text('remark'), // 备注
   shortLink: text('short_link').unique(), // 渠道短连接
+  tags: jsonb('tags').$type<string[]>(), // 渠道标签
   createdAt: timestamp('created_at').defaultNow().notNull(), // 创建时间
   updatedAt: timestamp('updated_at').defaultNow().notNull(), // 修改时间
   isActive: boolean('is_active').default(true), // 是否启用

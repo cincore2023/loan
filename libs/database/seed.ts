@@ -36,7 +36,7 @@ async function seed() {
     if (existingQuestionnaires.length === 0) {
       // 添加默认问卷
       const questionnaireResult = await db.insert(questionnaires).values({
-        questionnaireNumber: 'QN001',
+        questionnaireNumber: 'QN001' as const,
         questionnaireName: '贷款申请问卷',
         remark: '默认贷款申请问卷',
         questions: [

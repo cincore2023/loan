@@ -72,7 +72,11 @@ export default function QuestionnairesPage() {
       const data = await response.json();
       
       if (response.ok) {
-        setQuestionnaires(data.questionnaires);
+        // 按问卷编号倒序排列
+        const sortedQuestionnaires = data.questionnaires.sort((a: Questionnaire, b: Questionnaire) => {
+          return b.questionnaireNumber.localeCompare(a.questionnaireNumber);
+        });
+        setQuestionnaires(sortedQuestionnaires);
       } else {
         message.error(data.error || '获取问卷列表失败');
       }

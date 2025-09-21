@@ -208,6 +208,8 @@ export default function QuestionnaireFormPage() {
                         }
                       } catch (error) {
                         console.error('Validation failed:', error);
+                        // 验证失败时显示错误信息
+                        message.error('请检查表单填写是否正确');
                       }
                     }}>
                       保存
