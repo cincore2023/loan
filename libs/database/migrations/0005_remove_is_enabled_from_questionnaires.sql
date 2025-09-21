@@ -1,0 +1,1 @@
+ALTER TABLE "questionnaires" DROP COLUMN "is_enabled";

@@ -59,7 +59,6 @@ export type Question = {
   id: string;
   title: string;
   options: QuestionOption[];
-  correctOptionId: string;
 };
 
 // 问卷表
@@ -68,7 +67,7 @@ export const questionnaires = pgTable('questionnaires', {
   questionnaireNumber: text('questionnaire_number').notNull().unique(), // 问卷编号
   questionnaireName: text('questionnaire_name').notNull(), // 问卷名称
   remark: text('remark'), // 备注
-  questions: jsonb('questions').$type<Question[]>(), // 问卷题（题id，标题，选项（多个），正确选项）
+  questions: jsonb('questions').$type<Question[]>(), // 问卷题（题id，标题，选项（多个））
   createdAt: timestamp('created_at').defaultNow().notNull(), // 创建时间
   updatedAt: timestamp('updated_at').defaultNow().notNull(), // 修改时间
 });

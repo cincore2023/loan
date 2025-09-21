@@ -110,6 +110,7 @@ export default function CustomersPage() {
             idCard: '110101199001011234',
             submissionTime: '2023-05-15T10:30:00Z',
             channelLink: '渠道A',
+            questionnaireName: '客户满意度调查', // 添加问卷名称
             createdAt: '2023-05-15T10:30:00Z',
             updatedAt: '2023-05-15T10:30:00Z',
             selectedQuestions: [
@@ -145,6 +146,7 @@ export default function CustomersPage() {
             idCard: '310101199002021234',
             submissionTime: '2023-05-16T14:45:00Z',
             channelLink: '渠道B',
+            questionnaireName: '产品使用体验调查', // 添加问卷名称
             createdAt: '2023-05-16T14:45:00Z',
             updatedAt: '2023-05-16T14:45:00Z',
             selectedQuestions: [
@@ -171,6 +173,7 @@ export default function CustomersPage() {
             idCard: '440101199003031234',
             submissionTime: '2023-05-17T09:15:00Z',
             channelLink: '渠道C',
+            questionnaireName: '贷款需求调研', // 添加问卷名称
             createdAt: '2023-05-17T09:15:00Z',
             updatedAt: '2023-05-17T09:15:00Z'
           }

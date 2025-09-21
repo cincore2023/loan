@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   FileTextOutlined,
   PlusOutlined,
   EditOutlined,
-  DeleteOutlined,
-  EyeOutlined
+  CopyOutlined,
+  SearchOutlined
 } from '@ant-design/icons';
 import { 
   Button, 
@@ -17,62 +17,70 @@ import {
   theme,
   Space,
   Card,
-  Modal,
-  Form,
-  Input,
   message,
-  Switch
+  Row,
+  Col,
+  Spin,
+  Input
 } from 'antd';
 import AntdSidebar from '@/components/admin/antd-sidebar';
+import { v4 as uuidv4 } from 'uuid';
 
 const { Header, Content, Footer } = Layout;
+
+interface QuestionOption {
+  id: string;
+  text: string;
+}
+
+interface Question {
+  id: string;
+  title: string;
+  options: QuestionOption[];
+}
 
 interface Questionnaire {
   id: string;
   questionnaireNumber: string;
   questionnaireName: string;
   remark: string;
+  questions: Question[];
   createdAt: string;
   updatedAt: string;
-  isEnabled: boolean;
 }
 
 export default function QuestionnairesPage() {
-  const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([
-    {
-      id: '1',
-      questionnaireNumber: 'QN001',
-      questionnaireName: '客户满意度调查',
-      remark: '用于收集客户对服务的满意度反馈',
-      createdAt: '2023-05-15T10:30:00Z',
-      updatedAt: '2023-05-15T10:30:00Z',
-      isEnabled: true
-    },
-    {
-      id: '2',
-      questionnaireNumber: 'QN002',
-      questionnaireName: '产品使用体验',
-      remark: '了解用户对产品的使用体验和建议',
-      createdAt: '2023-05-16T14:45:00Z',
-      updatedAt: '2023-05-16T14:45:00Z',
-      isEnabled: true
-    }
-  ]);
+  const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingQuestionnaire, setEditingQuestionnaire] = useState<Questionnaire | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   
   const {
     token: { colorBgContainer },
   } = theme.useToken();
 
-  const handleLogout = () => {
-    if (confirm('确定要退出登录吗？')) {
-      // 清除认证 cookie
-      document.cookie = "admin-auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      // 跳转到登录页面
-      router.push('/admin');
+  // 获取问卷列表
+  useEffect(() => {
+    fetchQuestionnaires();
+  }, []);
+
+  const fetchQuestionnaires = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/questionnaires');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setQuestionnaires(data.questionnaires);
+      } else {
+        message.error(data.error || '获取问卷列表失败');
+      }
+    } catch (error) {
+      console.error('Failed to fetch questionnaires:', error);
+      message.error('网络错误，请稍后再试');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,36 +89,69 @@ export default function QuestionnairesPage() {
   };
 
   const handleAddQuestionnaire = () => {
-    setEditingQuestionnaire(null);
-    setIsModalVisible(true);
+    router.push('/admin/questionnaires/form');
   };
 
   const handleEditQuestionnaire = (record: Questionnaire) => {
-    setEditingQuestionnaire(record);
-    setIsModalVisible(true);
+    router.push(`/admin/questionnaires/form?id=${record.id}`);
   };
 
-  const handleDeleteQuestionnaire = (id: string) => {
-    setQuestionnaires(questionnaires.filter(q => q.id !== id));
-    message.success('问卷删除成功');
+  const handleCopyQuestionnaire = (record: Questionnaire) => {
+    // 复制问卷数据到添加页面，生成新的ID
+    const copiedQuestionnaire = {
+      ...record,
+      id: uuidv4(), // 生成新的ID
+      questionnaireNumber: `${record.questionnaireNumber}_copy`, // 修改问卷编号避免重复
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      // 为每个题目和选项生成新的ID
+      questions: record.questions.map(question => ({
+        ...question,
+        id: uuidv4(),
+        options: question.options.map(option => ({
+          ...option,
+          id: uuidv4()
+        }))
+      }))
+    };
+    
+    // 将复制的数据存储到localStorage
+    localStorage.setItem('copiedQuestionnaire', JSON.stringify(copiedQuestionnaire));
+    
+    // 跳转到添加问卷页面
+    router.push('/admin/questionnaires/form');
   };
 
-  const handleToggleStatus = (id: string, currentStatus: boolean) => {
-    setQuestionnaires(questionnaires.map(questionnaire => 
-      questionnaire.id === id ? { ...questionnaire, isEnabled: !currentStatus } : questionnaire
-    ));
-    message.success(`问卷${!currentStatus ? '启用' : '禁用'}成功`);
+  const handleDeleteQuestionnaire = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/questionnaires?id=${id}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        message.success('问卷删除成功');
+        fetchQuestionnaires(); // 重新获取问卷列表
+      } else {
+        message.error(data.error || '删除问卷失败');
+      }
+    } catch (error) {
+      console.error('Failed to delete questionnaire:', error);
+      message.error('删除问卷失败');
+    }
   };
 
-  const handleModalOk = () => {
-    // 这里应该处理表单提交逻辑
-    setIsModalVisible(false);
-    message.success(editingQuestionnaire ? '问卷更新成功' : '问卷创建成功');
-  };
-
-  const handleModalCancel = () => {
-    setIsModalVisible(false);
-  };
+  // 添加搜索过滤逻辑
+  const filteredQuestionnaires = useMemo(() => {
+    if (!searchTerm) return questionnaires;
+    
+    return questionnaires.filter(q => 
+      q.questionnaireNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      q.questionnaireName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (q.remark && q.remark.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [questionnaires, searchTerm]);
 
   const columns = [
     {
@@ -124,22 +165,15 @@ export default function QuestionnairesPage() {
       key: 'questionnaireName',
     },
     {
+      title: '题目数量',
+      dataIndex: 'questionCount',
+      key: 'questionCount',
+      render: (count: number) => count || 0,
+    },
+    {
       title: '备注',
       dataIndex: 'remark',
       key: 'remark',
-    },
-    {
-      title: '状态',
-      dataIndex: 'isEnabled',
-      key: 'isEnabled',
-      render: (isEnabled: boolean, record: Questionnaire) => (
-        <Switch 
-          checked={isEnabled} 
-          onChange={() => handleToggleStatus(record.id, isEnabled)} 
-          checkedChildren="启用" 
-          unCheckedChildren="禁用" 
-        />
-      ),
     },
     {
       title: '创建时间',
@@ -153,12 +187,10 @@ export default function QuestionnairesPage() {
       render: (_: any, record: Questionnaire) => (
         <Space size="middle">
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEditQuestionnaire(record)}>编辑问卷</Button>
-          <Button type="link" icon={<EyeOutlined />}>下载二维码</Button>
-          <Button type="link" icon={<EyeOutlined />}>查看问卷</Button>
+          <Button type="link" icon={<CopyOutlined />} onClick={() => handleCopyQuestionnaire(record)}>复制问卷</Button>
         </Space>
       ),
     },
-
   ];
 
   return (
@@ -184,16 +216,29 @@ export default function QuestionnairesPage() {
                 </Button>
               }
             >
-              <Table
-                columns={columns}
-                dataSource={questionnaires}
-                pagination={{
-                  pageSize: 10,
-                  showSizeChanger: true,
-                  showQuickJumper: true,
-                }}
-                rowKey="id"
-              />
+              {/* 添加搜索框 */}
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }} justify="end">
+                <Col xs={24} sm={12} md={6}>
+                  <Input
+                    placeholder="搜索问卷编号、名称、备注..."
+                    prefix={<SearchOutlined />}
+                    value={searchTerm}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                  />
+                </Col>
+              </Row>
+              <Spin spinning={loading}>
+                <Table
+                  columns={columns}
+                  dataSource={filteredQuestionnaires}
+                  pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    showQuickJumper: true,
+                  }}
+                  rowKey="id"
+                />
+              </Spin>
             </Card>
           </div>
         </Content>
@@ -201,27 +246,6 @@ export default function QuestionnairesPage() {
           Admin 管理后台 ©{new Date().getFullYear()}
         </Footer>
       </Layout>
-      
-      <Modal
-        title={editingQuestionnaire ? "编辑问卷" : "添加问卷"}
-        open={isModalVisible}
-        onOk={handleModalOk}
-        onCancel={handleModalCancel}
-        okText="确定"
-        cancelText="取消"
-      >
-        <Form layout="vertical">
-          <Form.Item label="问卷编号" required>
-            <Input placeholder="请输入问卷编号" />
-          </Form.Item>
-          <Form.Item label="问卷名称" required>
-            <Input placeholder="请输入问卷名称" />
-          </Form.Item>
-          <Form.Item label="备注">
-            <Input.TextArea placeholder="请输入备注" />
-          </Form.Item>
-        </Form>
-      </Modal>
     </Layout>
   );
 }
