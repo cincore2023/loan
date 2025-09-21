@@ -164,7 +164,6 @@ export default function QuestionnairesPage() {
   return (
     <Layout hasSider className="min-h-screen">
       <AntdSidebar 
-        onLogout={handleLogout} 
         isCollapsed={isSidebarCollapsed}
         onToggle={toggleSidebar}
       />

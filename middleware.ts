@@ -1,15 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { isAuthenticated } from '@/libs/auth/auth';
 
-// 模拟认证检查
-function isAuthenticated(request: NextRequest) {
-  // 在实际应用中，这里应该检查 session 或 JWT token
-  // 为了演示，我们简单检查是否存在 auth cookie
-  const authCookie = request.cookies.get('admin-auth');
-  return !!authCookie;
-}
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // 检查是否访问管理员路由
   if (request.nextUrl.pathname.startsWith('/admin')) {
     // 允许访问登录页面
@@ -18,7 +11,7 @@ export function middleware(request: NextRequest) {
     }
     
     // 检查其他管理员页面的认证状态
-    if (!isAuthenticated(request)) {
+    if (!(await isAuthenticated(request))) {
       // 未认证用户重定向到登录页面
       return NextResponse.redirect(new URL('/admin', request.url));
     }

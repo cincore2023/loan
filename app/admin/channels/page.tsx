@@ -132,22 +132,16 @@ export default function ChannelsPage() {
     {
       title: '渠道编号',
       dataIndex: 'channelNumber',
-      width: 100,
-      fixed: 'left',
       key: 'channelNumber',
     },
     {
       title: '渠道名称',
       dataIndex: 'channelName',
       key: 'channelName',
-      width: 120,
-      fixed: 'left',
     },
     {
       title: '渠道标签',
       dataIndex: 'tags',
-      ellipsis: true,
-      width: 150,
       key: 'tags',
       render: (tags: string[] | undefined) => (
         <>
@@ -159,19 +153,16 @@ export default function ChannelsPage() {
     },
     {
       title: '绑定问卷',
-      width: 150,
       dataIndex: 'boundQuestionnaire',
       key: 'boundQuestionnaire',
     },
     {
       title: 'UV访问次数',
-      width: 150,
       dataIndex: 'uvCount',
       key: 'uvCount',
     },
     {
       title: '问卷填写总数',
-      width: 150,
       dataIndex: 'formCount',
       key: 'formCount',
     },
@@ -188,7 +179,6 @@ export default function ChannelsPage() {
     {
       title: '备注',
       dataIndex: 'remark',
-      ellipsis: true,
       key: 'remark',
     },
     {
@@ -201,7 +191,7 @@ export default function ChannelsPage() {
       title: '状态',
       dataIndex: 'isEnabled',
       key: 'isEnabled',
-      fixed: 'right',
+      fixed: 'right' as const,
       render: (isEnabled: boolean, record: Channel) => (
         <Switch 
           checked={isEnabled} 
@@ -211,7 +201,7 @@ export default function ChannelsPage() {
     {
       title: '操作',
       key: 'action',
-      fixed: 'right',
+      fixed: 'right' as const,
       render: (_: any, record: Channel) => (
         <Space size="middle">
           <Button type="link" onClick={() => handleEditChannel(record)}>编辑渠道</Button>
@@ -225,7 +215,6 @@ export default function ChannelsPage() {
   return (
     <Layout hasSider className="min-h-screen">
       <AntdSidebar 
-        onLogout={handleLogout} 
         isCollapsed={isSidebarCollapsed}
         onToggle={toggleSidebar}
       />
@@ -296,8 +285,8 @@ export default function ChannelsPage() {
           </Form.Item>
           <Form.Item 
             label="是否启用" 
-            valuePropName="checked"
             name="isEnabled"
+            valuePropName="checked"
             initialValue={editingChannel ? editingChannel.isEnabled : true}
           >
             <Switch 

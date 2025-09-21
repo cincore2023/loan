@@ -79,17 +79,14 @@ interface CustomerSelectedQuestion {
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [provinceFilter, setProvinceFilter] = useState('');
   const [cityFilter, setCityFilter] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
-  // 级联选择器的值
   const [regionCascaderValue, setRegionCascaderValue] = useState<string[]>([]);
-  // 查看选题模态框的状态
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isViewQuestionsModalVisible, setIsViewQuestionsModalVisible] = useState(false);
-  // 当前查看的客户
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
   const router = useRouter();
   
@@ -191,15 +188,6 @@ export default function CustomersPage() {
 
     fetchCustomers();
   }, []);
-
-  const handleLogout = () => {
-    if (confirm('确定要退出登录吗？')) {
-      // 清除认证 cookie
-      document.cookie = "admin-auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      // 跳转到登录页面
-      router.push('/admin');
-    }
-  };
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -381,7 +369,6 @@ export default function CustomersPage() {
   return (
     <Layout hasSider className="min-h-screen">
       <AntdSidebar 
-        onLogout={handleLogout} 
         isCollapsed={isSidebarCollapsed}
         onToggle={toggleSidebar}
       />

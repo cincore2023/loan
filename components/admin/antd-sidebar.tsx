@@ -9,19 +9,18 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined
 } from '@ant-design/icons';
-import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React from 'react';
+import { clearAuthCookie } from '@/libs/auth/auth-client';
 
 const { Sider } = Layout;
 
 interface AntdSidebarProps {
-  onLogout: () => void;
   isCollapsed: boolean;
   onToggle: () => void;
 }
 
-export default function AntdSidebar({ onLogout, isCollapsed, onToggle }: AntdSidebarProps) {
+export default function AntdSidebar({ isCollapsed, onToggle }: AntdSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   
@@ -49,9 +48,12 @@ export default function AntdSidebar({ onLogout, isCollapsed, onToggle }: AntdSid
     },
   ];
 
-  const handleMenuClick = ({ key }: { key: string }) => {
+  const handleMenuClick = async ({ key }: { key: string }) => {
     if (key === 'logout') {
-      onLogout();
+      // 清除认证 cookie
+      await clearAuthCookie();
+      // 跳转到登录页面
+      router.push('/admin');
     } else {
       router.push(key);
     }
@@ -68,15 +70,8 @@ export default function AntdSidebar({ onLogout, isCollapsed, onToggle }: AntdSid
     >
       <div className="demo-logo-vertical" />
       <div className="flex items-center justify-between p-4">
-        {isCollapsed ? (
-          <div className="bg-gray-200 p-2 rounded-lg">
-            <UsergroupAddOutlined className="text-gray-700" />
-          </div>
-        ) : (
+        {isCollapsed ? '' : (
           <h1 className="text-lg font-medium text-gray-900 flex items-center">
-            <div className="bg-gray-200 p-2 rounded-lg mr-2">
-              <UsergroupAddOutlined className="text-gray-700" />
-            </div>
             Admin 管理后台
           </h1>
         )}

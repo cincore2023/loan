@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { admins, questionnaires, channels, customers, users, products } from './schema';
+import { admins, questionnaires, channels, customers, products } from './schema';
+import { hashPassword } from '@/libs/auth/password';
 
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/loan_db';
 const client = postgres(connectionString);
@@ -14,10 +15,13 @@ async function seed() {
     const existingAdmins = await db.select().from(admins).limit(1);
     
     if (existingAdmins.length === 0) {
+      // 加密默认管理员密码
+      const hashedPassword = await hashPassword('admin123');
+      
       // 添加默认管理员用户（已移除邮箱字段）
       const result = await db.insert(admins).values({
         name: 'admin',
-        password: 'admin123', // 在实际应用中应加密存储
+        password: hashedPassword, // 使用加密密码
         isActive: true,
       }).returning();
       

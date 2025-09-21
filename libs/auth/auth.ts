@@ -1,0 +1,93 @@
+import { SignJWT, jwtVerify } from 'jose';
+import { cookies } from 'next/headers';
+import { NextRequest } from 'next/server';
+
+// JWT 密钥 - 在实际应用中应该从环境变量中获取
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'your-super-secret-jwt-secret-key-for-development-only'
+);
+
+// Token 过期时间 (1小时)
+const TOKEN_EXPIRATION = 60 * 60;
+
+/**
+ * 生成 JWT token
+ */
+export async function generateToken(payload: any) {
+  const iat = Math.floor(Date.now() / 1000);
+  const exp = iat + TOKEN_EXPIRATION;
+
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt(iat)
+    .setExpirationTime(exp)
+    .sign(JWT_SECRET);
+}
+
+/**
+ * 验证 JWT token
+ */
+export async function verifyToken(token: string) {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload;
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * 设置认证 token 到 cookie
+ */
+export async function setAuthCookie(token: string) {
+  (await cookies()).set('admin-auth-token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: TOKEN_EXPIRATION,
+    path: '/',
+    sameSite: 'strict',
+  });
+}
+
+/**
+ * 从 cookie 中获取认证 token
+ */
+export async function getAuthToken() {
+  const cookieStore = await cookies();
+  return cookieStore.get('admin-auth-token')?.value;
+}
+
+/**
+ * 清除认证 cookie
+ */
+export async function clearAuthCookie() {
+  (await cookies()).delete('admin-auth-token');
+}
+
+/**
+ * 验证请求是否已认证
+ */
+export async function isAuthenticated(request: NextRequest) {
+  const token = await getAuthToken();
+  
+  if (!token) {
+    return false;
+  }
+
+  const payload = await verifyToken(token);
+  return payload !== null;
+}
+
+/**
+ * 获取当前认证用户信息
+ */
+export async function getCurrentUser() {
+  const token = await getAuthToken();
+  
+  if (!token) {
+    return null;
+  }
+
+  const payload = await verifyToken(token);
+  return payload;
+}

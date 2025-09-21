@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { db } from '@/libs/database/db';
 import { admins } from '@/libs/database/schema';
 import { eq } from 'drizzle-orm';
+import { generateToken, setAuthCookie } from '@/libs/auth/auth';
+import { verifyPassword } from '@/libs/auth/password';
 
 // 定义登录数据的验证模式
 const loginSchema = z.object({
@@ -25,7 +27,8 @@ export async function POST(request: NextRequest) {
     }
     
     // 验证密码
-    if (adminUser[0].password !== validatedData.password) {
+    const isPasswordValid = await verifyPassword(validatedData.password, adminUser[0].password);
+    if (!isPasswordValid) {
       return NextResponse.json({ error: '密码错误' }, { status: 401 });
     }
     
@@ -34,16 +37,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '账户已被禁用' }, { status: 401 });
     }
     
+    // 生成 JWT token
+    const token = await generateToken({
+      id: adminUser[0].id,
+      name: adminUser[0].name,
+    });
+    
+    // 设置认证 cookie
+    await setAuthCookie(token);
+    
     // 更新最后登录时间
     await db.update(admins).set({ lastLoginAt: new Date() }).where(eq(admins.id, adminUser[0].id));
     
-    // 登录成功，返回用户信息（实际应用中应该返回 token）
+    // 登录成功，返回用户信息和 token
     return NextResponse.json({
       message: '登录成功',
       user: {
         id: adminUser[0].id,
         name: adminUser[0].name,
-      }
+      },
+      token
     }, { status: 200 });
     
   } catch (error) {
