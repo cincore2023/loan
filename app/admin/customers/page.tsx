@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { 
   UsergroupAddOutlined,
   EyeOutlined,
-  SearchOutlined
+  SearchOutlined,
+  DownloadOutlined
 } from '@ant-design/icons';
 import { 
   Button, 
@@ -21,11 +22,14 @@ import {
   Col,
   message,
   Cascader,
-  Typography
+  Typography,
+  Dropdown
 } from 'antd';
 import AntdSidebar from '@/components/admin/antd-sidebar';
 import CustomerQuestionViewModal from '@/components/admin/customer-question-view-modal';
 import { provinces, cities, districts } from '@/lib/china-division';
+import { formatCurrency, formatPhoneNumber, formatIdCard, formatDateTime } from '@/lib/utils';
+import { exportCustomersToExcel, exportMultipleQuestionnaires } from '@/lib/export-utils';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 
@@ -196,7 +200,7 @@ export default function CustomersPage() {
       key: 'applicationAmount',
       render: (amount: string | null) => (
         <Tag color={amount ? 'blue' : 'default'}>
-          {amount ? `¥${amount}` : '未填写'}
+          {amount ? formatCurrency(amount) : '未填写'}
         </Tag>
       ),
     },
@@ -211,14 +215,11 @@ export default function CustomersPage() {
       title: '手机号',
       dataIndex: 'phoneNumber',
       key: 'phoneNumber',
-      render: (phone: string | null) => phone || '未填写',
     },
     {
       title: '身份证',
       dataIndex: 'idCard',
       key: 'idCard',
-      render: (idCard: string | null) => 
-        idCard ? idCard : '未填写',
     },
     {
       title: '渠道',
@@ -236,8 +237,7 @@ export default function CustomersPage() {
       title: '提交时间',
       dataIndex: 'submissionTime',
       key: 'submissionTime',
-      render: (time: string | null) => 
-        time ? dayjs(time).format('YYYY-MM-DD HH:mm:ss') : '未填写',
+      render: (time: string | null) => formatDateTime(time, 'YYYY-MM-DD HH:mm:ss'),
     },
     {
       title: '操作',
@@ -260,6 +260,65 @@ export default function CustomersPage() {
     setCurrentCustomer(null);
   };
 
+  // 按问卷分组客户数据
+  const groupedCustomers = useMemo(() => {
+    return customers.reduce((acc: Record<string, Customer[]>, customer) => {
+      const questionnaireName = customer.questionnaireName || '未命名问卷';
+      if (!acc[questionnaireName]) {
+        acc[questionnaireName] = [];
+      }
+      acc[questionnaireName].push(customer);
+      return acc;
+    }, {});
+  }, [customers]);
+
+  // 导出单个问卷数据
+  const handleExportQuestionnaire = async (questionnaireName: string) => {
+    const customersToExport = groupedCustomers[questionnaireName] || [];
+    if (customersToExport.length === 0) {
+      message.warning('该问卷暂无客户数据');
+      return;
+    }
+    exportCustomersToExcel(customersToExport, questionnaireName);
+  };
+
+  // 导出所有问卷数据
+  const handleExportAll = async () => {
+    if (customers.length === 0) {
+      message.warning('暂无客户数据可导出');
+      return;
+    }
+    
+    try {
+      // 调用API获取分组数据
+      const response = await fetch('/api/admin/customers?action=export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          search: searchTerm,
+          province: provinceFilter,
+          city: cityFilter,
+          district: districtFilter,
+          startDate: dateRange[0] ? dateRange[0].format('YYYY-MM-DD') : '',
+          endDate: dateRange[1] ? dateRange[1].format('YYYY-MM-DD') : '',
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        exportMultipleQuestionnaires(data.groupedCustomers);
+      } else {
+        message.error(data.error || '导出失败');
+      }
+    } catch (error) {
+      console.error('导出失败:', error);
+      message.error('导出失败，请稍后再试');
+    }
+  };
+
   return (
     <Layout hasSider className="min-h-screen">
       <AntdSidebar 
@@ -272,9 +331,34 @@ export default function CustomersPage() {
           <div style={{ padding: 24, minHeight: 360, background: colorBgContainer }}>
             <Card 
               title={
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <UsergroupAddOutlined style={{ marginRight: 8 }} />
-                  <span>客户资料</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <UsergroupAddOutlined style={{ marginRight: 8 }} />
+                    <span>客户资料</span>
+                  </div>
+                  <div>
+                    <Dropdown
+                      trigger={['click']}
+                      menu={{
+                        items: [
+                          {
+                            key: 'export-all',
+                            label: '导出所有问卷数据',
+                            onClick: handleExportAll
+                          },
+                          ...Object.keys(groupedCustomers).map((questionnaireName, index) => ({
+                            key: `export-${index}`,
+                            label: `导出 ${questionnaireName}`,
+                            onClick: () => handleExportQuestionnaire(questionnaireName)
+                          }))
+                        ]
+                      }}
+                    >
+                      <Button type="primary" icon={<DownloadOutlined />}>
+                        导出数据
+                      </Button>
+                    </Dropdown>
+                  </div>
                 </div>
               }
             >

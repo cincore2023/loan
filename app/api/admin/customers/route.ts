@@ -5,8 +5,6 @@ import { desc, like, and, gte, lte, eq, isNull, isNotNull, or } from 'drizzle-or
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 
-// 删除模拟客户数据
-
 // 定义客户数据的验证模式
 const customerSchema = z.object({
   customerName: z.string().min(1, '客户名称不能为空'),
@@ -133,6 +131,111 @@ export async function GET(request: Request) {
 // 创建客户数据
 export async function POST(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const action = searchParams.get('action');
+    
+    // 如果是导出请求
+    if (action === 'export') {
+      const body = await request.json();
+      const { search, province, city, district, startDate, endDate } = body;
+      
+      console.log('Export Parameters:', { search, province, city, district, startDate, endDate });
+      
+      // 构建查询条件
+      let query: any = db
+        .select({
+          id: customers.id,
+          customerName: customers.customerName,
+          applicationAmount: customers.applicationAmount,
+          province: customers.province,
+          city: customers.city,
+          district: customers.district,
+          phoneNumber: customers.phoneNumber,
+          idCard: customers.idCard,
+          submissionTime: customers.submissionTime,
+          channelLink: customers.channelLink,
+          createdAt: customers.createdAt,
+          updatedAt: customers.updatedAt,
+          selectedQuestions: customers.selectedQuestions,
+          questionnaireName: questionnaires.questionnaireName
+        })
+        .from(customers)
+        .leftJoin(questionnaires, eq(customers.questionnaireId, questionnaires.id));
+      
+      // 构建所有条件
+      const whereConditions = [];
+      
+      // 搜索条件使用OR逻辑
+      if (search) {
+        whereConditions.push(or(
+          like(customers.customerName, `%${search}%`),
+          like(customers.phoneNumber, `%${search}%`),
+          like(customers.idCard, `%${search}%`),
+          like(customers.channelLink, `%${search}%`)
+        ));
+      }
+      
+      // 地域筛选条件使用AND逻辑
+      if (province) {
+        whereConditions.push(like(customers.province, `%${province}%`));
+      }
+      
+      if (city) {
+        whereConditions.push(like(customers.city, `%${city}%`));
+      }
+      
+      if (district) {
+        whereConditions.push(like(customers.district, `%${district}%`));
+      }
+      
+      // 时间范围筛选条件使用AND逻辑
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        
+        whereConditions.push(
+          gte(customers.submissionTime, start),
+          lte(customers.submissionTime, end)
+        );
+      } else if (startDate) {
+        const start = new Date(startDate);
+        whereConditions.push(gte(customers.submissionTime, start));
+      } else if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        whereConditions.push(lte(customers.submissionTime, end));
+      }
+      
+      // 应用所有条件
+      if (whereConditions.length > 0) {
+        query = query.where(and(...whereConditions));
+      }
+      
+      console.log('Export query built successfully');
+      
+      // 添加排序（按创建时间倒序）
+      const customerList = await query.orderBy(desc(customers.createdAt));
+      
+      console.log('Customer list for export fetched:', customerList.length);
+      
+      // 按问卷分组
+      const groupedCustomers: Record<string, any[]> = {};
+      customerList.forEach((customer: any) => {
+        const questionnaireName = customer.questionnaireName || '未命名问卷';
+        if (!groupedCustomers[questionnaireName]) {
+          groupedCustomers[questionnaireName] = [];
+        }
+        groupedCustomers[questionnaireName].push(customer);
+      });
+      
+      return NextResponse.json({
+        groupedCustomers,
+        total: customerList.length
+      });
+    }
+    
+    // 创建客户数据的处理
     const body = await request.json();
     
     // 验证请求数据

@@ -7,7 +7,8 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  EyeOutlined
+  EyeOutlined,
+  DownloadOutlined
 } from '@ant-design/icons';
 import { 
   Button, 
@@ -33,6 +34,7 @@ import {
 import AntdSidebar from '@/components/admin/antd-sidebar';
 import QuestionnaireViewModal from '@/components/admin/questionnaire-view-modal';
 import ChannelQuestionnaireViewModal from '@/components/admin/channel-questionnaire-view-modal';
+import { exportChannelsToExcel } from '@/lib/export-utils';
 import dayjs from 'dayjs';
 
 const { Header, Content, Footer } = Layout;
@@ -338,6 +340,22 @@ export default function ChannelsPage() {
     setIsChannelQuestionnaireModalVisible(true);
   };
 
+  // 导出渠道数据
+  const handleExportChannels = () => {
+    if (channels.length === 0) {
+      message.warning('没有可导出的数据');
+      return;
+    }
+    
+    // 转换数据格式以匹配导出函数的要求
+    const exportData = channels.map(channel => ({
+      ...channel,
+      questionnaireName: questionnaires.find(q => q.id === channel.questionnaireId)?.questionnaireName || ''
+    }));
+    
+    exportChannelsToExcel(exportData);
+  };
+
   const columns = [
     {
       title: '渠道编号',
@@ -447,9 +465,17 @@ export default function ChannelsPage() {
                 </div>
               }
               extra={
-                <Button type="primary" icon={<PlusOutlined />} onClick={handleAddChannel}>
-                  添加渠道
-                </Button>
+                <Space>
+                  <Button 
+                    icon={<DownloadOutlined />} 
+                    onClick={handleExportChannels}
+                  >
+                    导出数据
+                  </Button>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleAddChannel}>
+                    添加渠道
+                  </Button>
+                </Space>
               }
             >
               {/* 添加筛选控件 */}

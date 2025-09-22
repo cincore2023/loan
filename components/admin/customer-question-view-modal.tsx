@@ -13,6 +13,7 @@ import {
   Divider,
   Descriptions
 } from 'antd';
+import { formatCurrency, formatPhoneNumber, formatIdCard, formatDateTime } from '@/lib/utils';
 
 const { Title, Text } = Typography;
 
@@ -121,16 +122,16 @@ export default function CustomerQuestionViewModal({
           <div>
             <Descriptions title="客户信息" column={2} style={{ marginBottom: 24 }}>
               <Descriptions.Item label="客户名称">{customer.customerName}</Descriptions.Item>
-              <Descriptions.Item label="申请额度">{customer.applicationAmount ? `¥${customer.applicationAmount}` : '未填写'}</Descriptions.Item>
+              <Descriptions.Item label="申请额度">{customer.applicationAmount ? formatCurrency(customer.applicationAmount) : '未填写'}</Descriptions.Item>
               <Descriptions.Item label="所属地区">
                 {customer.province || ''}{customer.city || ''}{customer.district || ''}
               </Descriptions.Item>
-              <Descriptions.Item label="手机号">{customer.phoneNumber || '未填写'}</Descriptions.Item>
-              <Descriptions.Item label="身份证">{customer.idCard || '未填写'}</Descriptions.Item>
+              <Descriptions.Item label="手机号">{formatPhoneNumber(customer.phoneNumber)}</Descriptions.Item>
+              <Descriptions.Item label="身份证">{formatIdCard(customer.idCard)}</Descriptions.Item>
               <Descriptions.Item label="渠道">{customer.channelLink || '未填写'}</Descriptions.Item>
               <Descriptions.Item label="问卷名称">{customer.questionnaireName || '未填写'}</Descriptions.Item>
               <Descriptions.Item label="提交时间">
-                {customer.submissionTime ? new Date(customer.submissionTime).toLocaleString() : '未填写'}
+                {formatDateTime(customer.submissionTime, 'YYYY-MM-DD HH:mm:ss')}
               </Descriptions.Item>
             </Descriptions>
             
@@ -139,29 +140,29 @@ export default function CustomerQuestionViewModal({
                 <Card size="small" title="问卷信息" style={{ marginBottom: 20 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
                     <div>
-                      <Text strong>问卷编号:</Text>
+                      <Typography.Text strong>问卷编号:</Typography.Text>
                       <br />
-                      <Text>{questionnaire.questionnaireNumber}</Text>
+                      <Typography.Text>{questionnaire.questionnaireNumber}</Typography.Text>
                     </div>
                     <div>
-                      <Text strong>问卷名称:</Text>
+                      <Typography.Text strong>问卷名称:</Typography.Text>
                       <br />
-                      <Text>{questionnaire.questionnaireName}</Text>
+                      <Typography.Text>{questionnaire.questionnaireName}</Typography.Text>
                     </div>
                     <div>
-                      <Text strong>备注:</Text>
+                      <Typography.Text strong>备注:</Typography.Text>
                       <br />
-                      <Text>{questionnaire.remark || '无'}</Text>
+                      <Typography.Text>{questionnaire.remark || '无'}</Typography.Text>
                     </div>
                     <div>
-                      <Text strong>创建时间:</Text>
+                      <Typography.Text strong>创建时间:</Typography.Text>
                       <br />
-                      <Text>{new Date(questionnaire.createdAt).toLocaleString()}</Text>
+                      <Typography.Text>{formatDateTime(questionnaire.createdAt, 'YYYY-MM-DD HH:mm:ss')}</Typography.Text>
                     </div>
                     <div>
-                      <Text strong>题目数量:</Text>
+                      <Typography.Text strong>题目数量:</Typography.Text>
                       <br />
-                      <Text>{questionnaire.questions?.length || 0}</Text>
+                      <Typography.Text>{questionnaire.questions?.length || 0}</Typography.Text>
                     </div>
                   </div>
                 </Card>
