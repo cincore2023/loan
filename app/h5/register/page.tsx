@@ -1,13 +1,76 @@
+'use client';
+
 import Image from 'next/image';
 import { CloseOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function Register() {
+  const router = useRouter();
+  const [channelId, setChannelId] = useState<string | null>(null);
+  const [channelInfo, setChannelInfo] = useState<any>(null);
+  const [questionnaire, setQuestionnaire] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   // 获取今天的日期字符串
   const today = new Date().toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
   }).replace(/\//g, '-');
+
+  useEffect(() => {
+    // 从 URL 查询参数中获取渠道 ID
+    const urlParams = new URLSearchParams(window.location.search);
+    const channelIdParam = urlParams.get('channelId');
+    
+    if (!channelIdParam) {
+      setError('缺少渠道ID参数');
+      setLoading(false);
+      return;
+    }
+    
+    setChannelId(channelIdParam);
+    fetchChannelAndQuestionnaire(channelIdParam);
+  }, []);
+
+  const fetchChannelAndQuestionnaire = async (channelId: string) => {
+    try {
+      setLoading(true);
+      // 调用 API 获取渠道和问卷信息
+      const response = await fetch(`/api/h5/questionnaire?channelId=${channelId}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setChannelInfo(data.channel);
+        setQuestionnaire(data.questionnaire);
+      } else {
+        setError(data.error || '获取渠道和问卷信息失败');
+      }
+    } catch (err) {
+      console.error('Failed to fetch channel and questionnaire:', err);
+      setError('网络错误，请稍后再试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen p-4 bg-[#f8f8f8] flex items-center justify-center">
+        <div>加载中...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen p-4 bg-[#f8f8f8] flex items-center justify-center">
+        <div className="text-red-500">错误: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-3 bg-[#f8f8f8]">
