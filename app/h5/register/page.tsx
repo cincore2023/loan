@@ -66,7 +66,7 @@ export default function Register() {
         <input 
           type="text" 
           placeholder="请输入手机号" 
-          className="w-full h-12 bg-[#f8f8f8] border-0 rounded-md text-base text-[#9a9a9a] px-4 mb-4"
+          className="w-full h-12 bg-[#f8f8f8] border-0 rounded-md text-base text-[#9a9a9a] px-4"
         />
         <div className="flex justify-center items-center h-12 my-4 mb-3 bg-[#325ef3] rounded-md text-lg font-medium text-white">
           去借钱
@@ -231,14 +231,34 @@ export default function Register() {
       </div>
       
       {/* 提示信息 */}
-      <div className="text-xs text-[#999] mt-6">
-        <p>本平台是移动金融信息广告展示平台，不提供放贷业务</p>
-        <p>平台向您展示的贷款产品或贷款咨询服务是由贷款服务机构</p>
-        <p>(泛指为您提供贷款咨询服务或贷款发放服务的机构)或贷款中介咨询机构提供 </p>
-        <p>您最终获取的贷款额度、放款时间以第三方机构实际审批结果为准</p>
-        <p>温馨提示:请根据个人能力合理贷款，理性消费，避免逾期</p>
-        <p>请不要相信任何要求您支付费用的信息、邮件、电话等不实信息</p>
-        <p> 客服电话:<span>4000606039</span>(服务时间:<span>9:00-18:00</span>工作日) </p>
+      <div className="flex flex-col items-center text-[12px] pt-[0.5405rem] text-[#999] mt-6">
+        <p className="text-center leading-[18px]">
+          本平台是移动金融信息广告展示平台，不提供放贷业务
+        </p>
+        <p className="text-center leading-[18px]">
+          平台向您展示的贷款产品或贷款咨询服务是由贷款服务机构
+        </p>
+        <p className="text-center leading-[18px]">
+          (泛指为您提供贷款咨询服务或贷款发放服务的机构)或贷款中介咨询机构提供
+        </p>
+        <p className="text-center leading-[18px]">
+          您最终获取的贷款额度、放款时间以第三方机构实际审批结果为准
+        </p>
+        <p className="text-center leading-[18px]">
+          温馨提示:请根据个人能力合理贷款，理性消费，避免逾期
+        </p>
+        <p className="text-center leading-[18px]">
+          请不要相信任何要求您支付费用的信息、邮件、电话等不实信息
+        </p>
+        <p className="text-center leading-[18px]">
+          客服电话:
+          <a href="tel:4000606039" className="text-[#3d5dea]">
+            4000606039
+          </a>
+          (服务时间:
+          <span className="text-[#3d5dea]">9:00-18:00</span>
+          工作日)
+        </p>
       </div>
       
       {/* 页脚 */}
