@@ -10,7 +10,7 @@ export default function Register() {
   }).replace(/\//g, '-');
 
   return (
-    <div className="min-h-screen p-4 bg-[#f8f8f8]">
+    <div className="min-h-screen p-3 bg-[#f8f8f8]">
       {/* 贷款信息容器 */}
       <div className="p-4 bg-white rounded-lg">
         <img src="/images/loan-info-container-title-new.png"  alt="" />
@@ -66,7 +66,7 @@ export default function Register() {
         <input 
           type="text" 
           placeholder="请输入手机号" 
-          className="w-full h-12 bg-[#f8f8f8] border-0 rounded-md text-base text-[#9a9a9a] px-4"
+          className="w-full h-12 bg-[#f8f8f8] border-0 rounded-md text-base text-black px-4"
         />
         <div className="flex justify-center items-center h-12 my-4 mb-3 bg-[#325ef3] rounded-md text-lg font-medium text-white">
           去借钱
