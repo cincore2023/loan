@@ -1,32 +1,36 @@
-import { users } from '@/libs/database/schema';
-import { db } from '@/libs/database/db';
+import Image from 'next/image';
 
-export default async function H5Home() {
-  // 获取用户数据
-  const usersData = await db.select().from(users).limit(10);
-  
+export default function H5Home() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold mb-6">H5 应用首页</h1>
-          <p className="mb-6">欢迎来到 H5 应用</p>
+    <div className="w-screen h-screen bg-white flex flex-col justify-center items-center text-black pt-0">
+      <div className="overflow-hidden w-[220px] h-[280px] mx-auto text-center text-[16px] flex flex-col justify-center items-center relative">
+        {/* 背景图作为单独的元素以确保居中 */}
+        <div className="absolute inset-0 bg-[url('/images/loading-background-image.png')] bg-no-repeat bg-center bg-contain z-0"></div>
+        <div className="w-[135px] h-[135px] my-[20px] mb-[15px] mx-auto relative flex justify-center items-center z-10">
+          <Image
+            src="/images/loading-image.gif"
+            alt=""
+            fill
+            sizes="135px"
+            style={{
+              objectFit: 'contain'
+            }}
+          />
         </div>
-        
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4 text-center">用户列表</h2>
-          {usersData.length > 0 ? (
-            <ul className="space-y-2">
-              {usersData.map((user) => (
-                <li key={user.id} className="border-b pb-2">
-                  <p className="font-medium">{user.name}</p>
-                  <p className="text-gray-600 text-sm">{user.email}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-center text-gray-500">暂无用户数据</p>
-          )}
+      </div>
+      <div className="my-[15px] mb-[25px] mx-0 w-full text-center z-10">借款申请正在智能评估中…</div>
+
+      <div className="fixed top-0 left-0 z-[3000] w-screen h-screen bg-white flex justify-center items-center" style={{ display: 'none' }}>
+        <div className="w-[250px] h-[250px] m-0 relative flex justify-center items-center">
+          <Image
+            src="/images/count-down-cover-image.gif"
+            alt=""
+            fill
+            sizes="250px"
+            style={{
+              objectFit: 'contain'
+            }}
+          />
         </div>
       </div>
     </div>
