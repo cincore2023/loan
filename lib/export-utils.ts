@@ -7,14 +7,14 @@ interface CustomerData {
   id: string;
   customerNumber?: string;
   customerName?: string;
-  applicationAmount?: string;
-  province?: string;
-  city?: string;
-  district?: string;
-  phoneNumber?: string;
-  idCard?: string;
-  submissionTime?: string;
-  channelLink?: string;
+  applicationAmount?: string | null;
+  province?: string | null;
+  city?: string | null;
+  district?: string | null;
+  phoneNumber?: string | null;
+  idCard?: string | null;
+  submissionTime?: string | null;
+  channelLink?: string | null;
   createdAt?: string;
   updatedAt?: string;
   selectedQuestions?: {
@@ -22,8 +22,8 @@ interface CustomerData {
     questionTitle: string;
     selectedOptionId: string;
     selectedOptionText: string;
-  }[];
-  questionnaireName?: string;
+  }[] | null;
+  questionnaireName?: string | null;
 }
 
 /**
@@ -270,12 +270,12 @@ interface ChannelData {
   id: string;
   channelNumber: string;
   channelName: string;
-  questionnaireName?: string;
+  questionnaireName?: string | null;
   uvCount: number;
   questionnaireSubmitCount: number;
   remark: string;
   shortLink: string;
-  tags?: string[];
+  tags?: string[] | null;
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
