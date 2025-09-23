@@ -22,7 +22,7 @@ export type CustomerSelectedQuestion = {
 // 客户表
 export const customers = pgTable('customers', {
   id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
-  customerName: text('customer_name').notNull(), // 客户名称
+  customerName: text('customer_name'), // 客户名称（可为空）
   applicationAmount: text('application_amount'), // 申请额度
   province: text('province'), // 省
   city: text('city'), // 市

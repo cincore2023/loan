@@ -5,8 +5,7 @@ import { formatDateTime } from '@/lib/utils';
 // 定义客户数据类型
 interface CustomerData {
   id: string;
-  customerNumber?: string;
-  customerName?: string;
+  customerName?: string | null;
   applicationAmount?: string | null;
   province?: string | null;
   city?: string | null;
@@ -104,7 +103,6 @@ export function exportCustomersToExcel(
   
   // 设置列宽
   const colWidths = [
-    { wch: 15 }, // 客户编号
     { wch: 15 }, // 客户名称
     { wch: 15 }, // 申请额度
     { wch: 15 }, // 所属省份
@@ -169,7 +167,6 @@ export function exportMultipleQuestionnaires(
     // 处理客户数据
     const worksheetData = customers.map(customer => {
       const baseData = {
-        '客户编号': customer.customerNumber || '',
         '客户名称': customer.customerName || '',
         '申请额度': customer.applicationAmount || '',
         '所属省份': customer.province || '',
@@ -212,7 +209,6 @@ export function exportMultipleQuestionnaires(
     
     // 设置列宽
     const colWidths = [
-      { wch: 15 }, // 客户编号
       { wch: 15 }, // 客户名称
       { wch: 15 }, // 申请额度
       { wch: 15 }, // 所属省份

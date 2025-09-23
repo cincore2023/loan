@@ -4,15 +4,19 @@ import Image from 'next/image';
 import { CloseOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { h5Store } from '../store';
+import { toast } from 'sonner';
 
 export default function Register() {
   const router = useRouter();
-  const [channelId, setChannelId] = useState<string | null>(null);
   const [channelInfo, setChannelInfo] = useState<any>(null);
   const [questionnaire, setQuestionnaire] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [channelId, setChannelId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [applicationAmount, setApplicationAmount] = useState('200000');
+  const [phoneNumber, setPhoneNumber] = useState('');
+
   // 获取今天的日期字符串
   const today = new Date().toLocaleDateString('zh-CN', {
     year: 'numeric',
@@ -21,56 +25,64 @@ export default function Register() {
   }).replace(/\//g, '-');
 
   useEffect(() => {
-    // 从 URL 查询参数中获取渠道 ID
-    const urlParams = new URLSearchParams(window.location.search);
-    const channelIdParam = urlParams.get('channelId');
+    // 从store中获取问卷数据
+    const storedChannelInfo = h5Store.getData('channelInfo');
+    const storedQuestionnaire = h5Store.getData('questionnaire');
+    const storedChannelId = h5Store.getData('channelId');
     
-    if (!channelIdParam) {
-      setError('缺少渠道ID参数');
-      setLoading(false);
+    if (!storedChannelInfo || !storedQuestionnaire || !storedChannelId) {
+      setError('缺少必要的渠道或问卷信息');
       return;
     }
     
-    setChannelId(channelIdParam);
-    fetchChannelAndQuestionnaire(channelIdParam);
+    setChannelInfo(storedChannelInfo);
+    setQuestionnaire(storedQuestionnaire);
+    setChannelId(storedChannelId);
   }, []);
 
-  const fetchChannelAndQuestionnaire = async (channelId: string) => {
+  const handleSubmit = async () => {
+    // 只验证申请额度和手机号
+    if (!applicationAmount || !phoneNumber) {
+      toast.error('请填写申请额度和手机号');
+      return;
+    }
+    
     try {
       setLoading(true);
-      // 调用 API 获取渠道和问卷信息
-      const response = await fetch(`/api/h5/questionnaire?channelId=${channelId}`);
+      
+      // 创建客户资料
+      const response = await fetch('/api/admin/customers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          applicationAmount,
+          phoneNumber,
+          channelLink: channelInfo?.shortLink || '',
+          questionnaireId: questionnaire?.id || '',
+        }),
+      });
+      
       const data = await response.json();
       
       if (response.ok) {
-        setChannelInfo(data.channel);
-        setQuestionnaire(data.questionnaire);
+        // 创建成功，将客户ID和申请金额存储到store
+        h5Store.setData('customerId', data.id);
+        h5Store.setData('applicationAmount', applicationAmount);
+        
+        // 跳转到问卷页面
+        router.push(`/h5/questionnaire?customerId=${data.id}`);
       } else {
-        setError(data.error || '获取渠道和问卷信息失败');
+        toast.error(data.error || '创建客户资料失败');
       }
     } catch (err) {
-      console.error('Failed to fetch channel and questionnaire:', err);
-      setError('网络错误，请稍后再试');
+      console.error('Failed to create customer:', err);
+      toast.error('网络错误，请稍后再试');
     } finally {
       setLoading(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen p-4 bg-[#f8f8f8] flex items-center justify-center">
-        <div>加载中...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen p-4 bg-[#f8f8f8] flex items-center justify-center">
-        <div className="text-red-500">错误: {error}</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen p-3 bg-[#f8f8f8]">
@@ -86,9 +98,11 @@ export default function Register() {
         <div className="flex items-center justify-between pb-2 border-b border-[#e0e0e0] whitespace-nowrap">
           <input 
             type="number" 
-            className="w-3/5 bg-transparent border-0 outline-none text-xl font-bold text-[#333]"
+            className="w-3/5 bg-transparent border-0 outline-none text-[30px] font-bold text-[#333]"
             style={{ background: 'transparent' }}
             placeholder="请输入金额"
+            value={applicationAmount}
+            onChange={(e) => setApplicationAmount(e.target.value)}
           />
           <div className="flex items-center flex-1 text-[12px] text-[#366df7]">
             <span>全部借出</span>
@@ -129,10 +143,15 @@ export default function Register() {
         <input 
           type="text" 
           placeholder="请输入手机号" 
-          className="w-full h-12 bg-[#f8f8f8] border-0 rounded-md text-base text-black px-4"
+          className="w-full h-12 bg-[#f8f8f8] border-0 rounded-md text-base text-black px-4 mb-4"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
         />
-        <div className="flex justify-center items-center h-12 my-4 mb-3 bg-[#325ef3] rounded-md text-lg font-medium text-white">
-          去借钱
+        <div 
+          className="flex justify-center items-center h-12 my-4 mb-3 bg-[#325ef3] rounded-md text-lg font-medium text-white cursor-pointer"
+          onClick={handleSubmit}
+        >
+          {loading ? '提交中...' : '去借钱'}
         </div>
         <div className="flex justify-center items-center text-sm text-[#5a5a5a]">
           <div className="relative size-3 mr-2">

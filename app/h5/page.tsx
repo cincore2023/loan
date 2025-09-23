@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { h5Store } from './store';
 
 export default function H5Home() {
   const router = useRouter();
@@ -27,8 +28,13 @@ export default function H5Home() {
         const data = await response.json();
         
         if (response.ok) {
+          // 将问卷数据存储到store中
+          h5Store.setData('channelInfo', data.channel);
+          h5Store.setData('questionnaire', data.questionnaire);
+          h5Store.setData('channelId', channelId);
+          
           // 成功获取问卷信息，跳转到注册页面
-          router.push(`/h5/register?channelId=${channelId}`);
+          router.push(`/h5/register`);
         } else {
           setError(data.error || '获取问卷信息失败');
         }

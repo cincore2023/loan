@@ -7,7 +7,8 @@ import { z } from 'zod';
 
 // 定义客户数据的验证模式
 const customerSchema = z.object({
-  customerName: z.string().min(1, '客户名称不能为空'),
+  id: z.string().optional(),
+  customerName: z.string().optional(),
   applicationAmount: z.string().optional(),
   province: z.string().optional(),
   city: z.string().optional(),
@@ -244,7 +245,7 @@ export async function POST(request: NextRequest) {
     // 创建新客户
     const newCustomer = await db.insert(customers).values({
       id: uuidv4(),
-      customerName: validatedData.customerName,
+      customerName: validatedData.customerName || null,
       applicationAmount: validatedData.applicationAmount,
       province: validatedData.province,
       city: validatedData.city,
@@ -252,7 +253,7 @@ export async function POST(request: NextRequest) {
       phoneNumber: validatedData.phoneNumber,
       idCard: validatedData.idCard,
       submissionTime: validatedData.submissionTime ? new Date(validatedData.submissionTime) : new Date(),
-      questionnaireId: validatedData.questionnaireId,
+      questionnaireId: validatedData.questionnaireId && validatedData.questionnaireId !== '' ? validatedData.questionnaireId : null,
       selectedQuestions: validatedData.selectedQuestions || [],
       channelLink: validatedData.channelLink,
       createdAt: new Date(),
@@ -294,17 +295,17 @@ export async function PUT(request: NextRequest) {
     
     // 更新客户
     const updatedCustomer = await db.update(customers).set({
-      customerName: validatedData.customerName || existingCustomer[0].customerName,
-      applicationAmount: validatedData.applicationAmount,
-      province: validatedData.province,
-      city: validatedData.city,
-      district: validatedData.district,
-      phoneNumber: validatedData.phoneNumber,
-      idCard: validatedData.idCard,
+      customerName: validatedData.customerName || existingCustomer[0].customerName || null,
+      applicationAmount: validatedData.applicationAmount || existingCustomer[0].applicationAmount,
+      province: validatedData.province || existingCustomer[0].province,
+      city: validatedData.city || existingCustomer[0].city,
+      district: validatedData.district || existingCustomer[0].district,
+      phoneNumber: validatedData.phoneNumber || existingCustomer[0].phoneNumber,
+      idCard: validatedData.idCard || existingCustomer[0].idCard,
       submissionTime: validatedData.submissionTime ? new Date(validatedData.submissionTime) : existingCustomer[0].submissionTime,
-      questionnaireId: validatedData.questionnaireId,
-      selectedQuestions: validatedData.selectedQuestions || [],
-      channelLink: validatedData.channelLink,
+      questionnaireId: validatedData.questionnaireId && validatedData.questionnaireId !== '' ? validatedData.questionnaireId : (existingCustomer[0].questionnaireId || null),
+      selectedQuestions: validatedData.selectedQuestions || existingCustomer[0].selectedQuestions || [],
+      channelLink: validatedData.channelLink || existingCustomer[0].channelLink,
       updatedAt: new Date(),
     }).where(eq(customers.id, body.id)).returning();
     

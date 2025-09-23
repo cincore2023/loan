@@ -14,7 +14,6 @@ async function seedCustomers() {
     // 添加客户数据
     const customerData = [
       {
-        customerNumber: 'CUST001',
         customerName: '张三',
         applicationAmount: '50000',
         province: '北京市',
@@ -28,7 +27,6 @@ async function seedCustomers() {
         updatedAt: new Date('2023-05-15T10:30:00Z')
       },
       {
-        customerNumber: 'CUST002',
         customerName: '李四',
         applicationAmount: '80000',
         province: '上海市',
@@ -42,7 +40,6 @@ async function seedCustomers() {
         updatedAt: new Date('2023-05-16T14:45:00Z')
       },
       {
-        customerNumber: 'CUST003',
         customerName: '王五',
         applicationAmount: '120000',
         province: '广东省',
