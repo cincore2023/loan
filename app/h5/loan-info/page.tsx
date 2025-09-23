@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { h5Store } from '../store';
+import { h5Store } from '@/lib/store';
 import PersonalInfoForm from './PersonalInfoForm';
 
 export default function LoanInfo() {
@@ -39,9 +39,9 @@ export default function LoanInfo() {
     setEstimatedAmount(initial);
   }, []);
 
-  // 计算进度百分比（初始50%，答题过程中逐步增加）
+  // 计算进度百分比（初始50%，答题过程中逐步增加，填写个人信息后100%）
   const progressPercentage = questionnaire ? 
-    showPersonalInfoForm ? 50 : 50 + Math.round(((currentQuestionIndex) / questionnaire.questions.length) * 50) : 0;
+    showPersonalInfoForm ? 100 : 50 + Math.round(((currentQuestionIndex) / questionnaire.questions.length) * 50) : 50;
   
   // 处理选项选择
   const handleOptionSelect = (optionId: string) => {

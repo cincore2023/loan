@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { provinces, cities } from '@/lib/china-division';
-import { h5Store } from '../store';
+import { h5Store } from '../../../lib/store';
 
 interface PersonalInfoFormProps {
   customerId: string;
@@ -89,8 +89,8 @@ export default function PersonalInfoForm({ customerId, onSubmit, onCancel }: Per
   // 获取当前省份的城市列表
   const currentCities = currentProvinceCode ? cities[currentProvinceCode] || [] : [];
 
-  // 计算进度百分比
-  const progressPercentage = isSubmitted ? 100 : 50;
+  // 计算进度百分比（答题完成时应该是100%）
+  const progressPercentage = 100;
 
   return (
     <div className="fixed inset-0 bg-white z-50 flex flex-col">

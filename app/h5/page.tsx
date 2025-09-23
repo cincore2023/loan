@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { h5Store } from './store';
+import { h5Store } from '../../lib/store';
 
 export default function H5Home() {
   const router = useRouter();

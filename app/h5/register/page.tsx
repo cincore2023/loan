@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { CloseOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { h5Store } from '../store';
+import { h5Store } from '../../../lib/store';
 import { toast } from 'sonner';
 
 export default function Register() {
