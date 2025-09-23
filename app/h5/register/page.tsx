@@ -72,7 +72,7 @@ export default function Register() {
         h5Store.setData('applicationAmount', applicationAmount);
         
         // 跳转到问卷页面
-        router.push(`/h5/questionnaire?customerId=${data.id}`);
+        router.push(`/h5/loan-info`);
       } else {
         toast.error(data.error || '创建客户资料失败');
       }
