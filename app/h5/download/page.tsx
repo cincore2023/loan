@@ -9,13 +9,12 @@ const DownloadPage = () => {
                 {/* 额度展示 */}
                 <div className="bg-white rounded-2xl p-4 w-full max-w-md mb-4 shadow-sm border border-gray-100">
                     <div className="text-center mb-2">
-                        <div className="inline-block bg-blue-50 rounded-full px-2 py-0.5">
                             <span className="text-blue-600 text-xs font-medium">专属额度</span>
-                        </div>
                     </div>
-                    <p className="text-green-600 text-xs font-medium text-center mb-2">恭喜你，已通过初审，下载app立即提现</p>
                     <div className="text-3xl font-bold text-center text-blue-600 my-1">80,000</div>
                     <div className="text-sm text-center text-gray-500 mb-1">元</div>
+                    <p className="text-green-600 text-xs font-medium text-center mb-2">恭喜你，已通过初审，下载app立即提现</p>
+
                 </div>
 
                 {/* 服务说明 */}
