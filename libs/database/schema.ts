@@ -70,8 +70,10 @@ export const channels = pgTable('channels', {
   uvCount: integer('uv_count').default(0), // UV访问次数
   questionnaireSubmitCount: integer('questionnaire_submit_count').default(0), // 问卷填写总数
   remark: text('remark'), // 备注
-  shortLink: text('short_link').unique(), // 渠道短连接
+  shortLink: text('short_link').unique(), // 短链接
   tags: jsonb('tags').$type<string[]>(), // 渠道标签
+  downloadLink: text('download_link'), // 下载链接
+  isDefault: boolean('is_default').default(false), // 是否为默认渠道
   createdAt: timestamp('created_at').defaultNow().notNull(), // 创建时间
   updatedAt: timestamp('updated_at').defaultNow().notNull(), // 修改时间
   isActive: boolean('is_active').default(true), // 是否启用

@@ -28,6 +28,8 @@ export async function GET(request: Request) {
         remark: channels.remark,
         shortLink: channels.shortLink,
         tags: channels.tags,
+        downloadLink: channels.downloadLink,
+        isDefault: channels.isDefault,
         createdAt: channels.createdAt,
         updatedAt: channels.updatedAt,
         isActive: channels.isActive,
@@ -38,16 +40,11 @@ export async function GET(request: Request) {
     
     // 添加搜索条件
     if (search) {
-      query = query.where(like(channels.channelNumber, `%${search}%`));
-    }
-    
-    // 添加时间范围筛选条件
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999); // 设置结束时间为当天的最后一毫秒
-      
-      if (search) {
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // 设置结束时间为当天的最后一毫秒
+        
         query = query.where(
           and(
             like(channels.channelNumber, `%${search}%`),
@@ -55,30 +52,17 @@ export async function GET(request: Request) {
             lte(channels.createdAt, end)
           )
         );
-      } else {
-        query = query.where(
-          and(
-            gte(channels.createdAt, start),
-            lte(channels.createdAt, end)
-          )
-        );
-      }
-    } else if (startDate) {
-      const start = new Date(startDate);
-      if (search) {
+      } else if (startDate) {
+        const start = new Date(startDate);
         query = query.where(
           and(
             like(channels.channelNumber, `%${search}%`),
             gte(channels.createdAt, start)
           )
         );
-      } else {
-        query = query.where(gte(channels.createdAt, start));
-      }
-    } else if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999); // 设置结束时间为当天的最后一毫秒
-      if (search) {
+      } else if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // 设置结束时间为当天的最后一毫秒
         query = query.where(
           and(
             like(channels.channelNumber, `%${search}%`),
@@ -86,6 +70,28 @@ export async function GET(request: Request) {
           )
         );
       } else {
+        // 只有搜索条件，没有日期条件
+        query = query.where(like(channels.channelNumber, `%${search}%`));
+      }
+    } else {
+      // 只有日期条件，没有搜索条件
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // 设置结束时间为当天的最后一毫秒
+        
+        query = query.where(
+          and(
+            gte(channels.createdAt, start),
+            lte(channels.createdAt, end)
+          )
+        );
+      } else if (startDate) {
+        const start = new Date(startDate);
+        query = query.where(gte(channels.createdAt, start));
+      } else if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // 设置结束时间为当天的最后一毫秒
         query = query.where(lte(channels.createdAt, end));
       }
     }
@@ -105,16 +111,11 @@ export async function GET(request: Request) {
     
     // 添加相同的筛选条件到计数查询
     if (search) {
-      countQuery = countQuery.where(like(channels.channelNumber, `%${search}%`));
-    }
-    
-    // 添加相同的时间范围筛选条件到计数查询
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      
-      if (search) {
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        
         countQuery = countQuery.where(
           and(
             like(channels.channelNumber, `%${search}%`),
@@ -122,30 +123,17 @@ export async function GET(request: Request) {
             lte(channels.createdAt, end)
           )
         );
-      } else {
-        countQuery = countQuery.where(
-          and(
-            gte(channels.createdAt, start),
-            lte(channels.createdAt, end)
-          )
-        );
-      }
-    } else if (startDate) {
-      const start = new Date(startDate);
-      if (search) {
+      } else if (startDate) {
+        const start = new Date(startDate);
         countQuery = countQuery.where(
           and(
             like(channels.channelNumber, `%${search}%`),
             gte(channels.createdAt, start)
           )
         );
-      } else {
-        countQuery = countQuery.where(gte(channels.createdAt, start));
-      }
-    } else if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      if (search) {
+      } else if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
         countQuery = countQuery.where(
           and(
             like(channels.channelNumber, `%${search}%`),
@@ -153,6 +141,28 @@ export async function GET(request: Request) {
           )
         );
       } else {
+        // 只有搜索条件，没有日期条件
+        countQuery = countQuery.where(like(channels.channelNumber, `%${search}%`));
+      }
+    } else {
+      // 只有日期条件，没有搜索条件
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        
+        countQuery = countQuery.where(
+          and(
+            gte(channels.createdAt, start),
+            lte(channels.createdAt, end)
+          )
+        );
+      } else if (startDate) {
+        const start = new Date(startDate);
+        countQuery = countQuery.where(gte(channels.createdAt, start));
+      } else if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
         countQuery = countQuery.where(lte(channels.createdAt, end));
       }
     }
@@ -182,16 +192,15 @@ export async function POST(request: Request) {
     // 生成唯一的渠道编号
     const channelNumber = body.channelNumber || `CH${Date.now()}`;
     
-    // 根据渠道编号自动生成短链接
-    const shortLink = body.shortLink || `https://loan.example.com/${channelNumber}`;
-    
     const newChannel = await db.insert(channels).values({
       id: uuidv4(),
       channelNumber,
       channelName: body.channelName,
       questionnaireId: body.questionnaireId,
       remark: body.remark,
-      shortLink,
+      shortLink: body.shortLink, // 用户自定义的短链接
+      downloadLink: body.downloadLink,
+      isDefault: body.isDefault !== undefined ? body.isDefault : false,
       tags: body.tags || [],
       isActive: body.isActive !== undefined ? body.isActive : true,
       createdAt: new Date(),
@@ -202,9 +211,9 @@ export async function POST(request: Request) {
       channel: newChannel[0],
       message: '渠道创建成功'
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to create channel:', error);
-    return NextResponse.json({ error: 'Failed to create channel' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create channel', details: error.message }, { status: 500 });
   }
 }
 
@@ -217,18 +226,14 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: '渠道ID不能为空' }, { status: 400 });
     }
     
-    // 如果没有提供短链接，则根据渠道编号自动生成
-    let shortLink = body.shortLink;
-    if (!shortLink && body.channelNumber) {
-      shortLink = `https://loan.example.com/${body.channelNumber}`;
-    }
-    
     const updatedChannel = await db.update(channels)
       .set({
         channelName: body.channelName,
         questionnaireId: body.questionnaireId,
         remark: body.remark,
-        shortLink: shortLink || body.shortLink,
+        shortLink: body.shortLink, // 用户自定义的短链接
+        downloadLink: body.downloadLink,
+        isDefault: body.isDefault,
         tags: body.tags || [],
         isActive: body.isActive,
         updatedAt: new Date()
@@ -240,9 +245,9 @@ export async function PUT(request: Request) {
       channel: updatedChannel[0],
       message: '渠道更新成功'
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to update channel:', error);
-    return NextResponse.json({ error: 'Failed to update channel' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update channel', details: error.message }, { status: 500 });
   }
 }
 

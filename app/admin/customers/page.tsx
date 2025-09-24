@@ -80,6 +80,12 @@ export default function CustomersPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isViewQuestionsModalVisible, setIsViewQuestionsModalVisible] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
+  // 添加搜索关键词状态（用于按钮点击搜索）
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [provinceSearch, setProvinceSearch] = useState('');
+  const [citySearch, setCitySearch] = useState('');
+  const [districtSearch, setDistrictSearch] = useState('');
+  const [dateSearchRange, setDateSearchRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
   
   const {
     token: { colorBgContainer },
@@ -92,12 +98,12 @@ export default function CustomersPage() {
         
         // 构建查询参数
         const params = new URLSearchParams();
-        if (searchTerm) params.append('search', searchTerm);
-        if (provinceFilter) params.append('province', provinceFilter);
-        if (cityFilter) params.append('city', cityFilter);
-        if (districtFilter) params.append('district', districtFilter);
-        if (dateRange[0]) params.append('startDate', dateRange[0].format('YYYY-MM-DD'));
-        if (dateRange[1]) params.append('endDate', dateRange[1].format('YYYY-MM-DD'));
+        if (searchKeyword) params.append('search', searchKeyword);
+        if (provinceSearch) params.append('province', provinceSearch);
+        if (citySearch) params.append('city', citySearch);
+        if (districtSearch) params.append('district', districtSearch);
+        if (dateSearchRange[0]) params.append('startDate', dateSearchRange[0].format('YYYY-MM-DD'));
+        if (dateSearchRange[1]) params.append('endDate', dateSearchRange[1].format('YYYY-MM-DD'));
         
         // 调用真实的API获取客户数据
         const response = await fetch(`/api/admin/customers?${params.toString()}`);
@@ -117,7 +123,7 @@ export default function CustomersPage() {
     };
 
     fetchCustomers();
-  }, [searchTerm, provinceFilter, cityFilter, districtFilter, dateRange]);
+  }, [searchKeyword, provinceSearch, citySearch, districtSearch, dateSearchRange]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -186,6 +192,32 @@ export default function CustomersPage() {
     } else {
       setDateRange([null, null]);
     }
+  };
+
+  // 添加搜索处理函数
+  const handleSearch = () => {
+    setSearchKeyword(searchTerm);
+    setProvinceSearch(provinceFilter);
+    setCitySearch(cityFilter);
+    setDistrictSearch(districtFilter);
+    setDateSearchRange(dateRange);
+  };
+
+  // 添加重置搜索处理函数
+  const handleResetSearch = () => {
+    setSearchTerm('');
+    setProvinceFilter('');
+    setCityFilter('');
+    setDistrictFilter('');
+    setDateRange([null, null]);
+    setRegionCascaderValue([]);
+    
+    // 重置搜索条件
+    setSearchKeyword('');
+    setProvinceSearch('');
+    setCitySearch('');
+    setDistrictSearch('');
+    setDateSearchRange([null, null]);
   };
 
   const columns = [
@@ -389,10 +421,15 @@ export default function CustomersPage() {
                     placeholder={['开始时间', '结束时间']}
                   />
                 </Col>
-                <Col xs={24} sm={12} md={2}>
-                  <Button onClick={handleClearFilters}>
-                    清除筛选
-                  </Button>
+                <Col xs={24} sm={12} md={4}>
+                  <Space>
+                    <Button type="primary" onClick={handleSearch}>
+                      查询
+                    </Button>
+                    <Button onClick={handleResetSearch}>
+                      重置
+                    </Button>
+                  </Space>
                 </Col>
               </Row>
               <Table

@@ -8,7 +8,8 @@ import {
   EditOutlined,
   DeleteOutlined,
   EyeOutlined,
-  DownloadOutlined
+  DownloadOutlined,
+  CopyOutlined
 } from '@ant-design/icons';
 import { 
   Button, 
@@ -29,13 +30,13 @@ import {
   Col,
   DatePicker,
   Select,
-  QRCode
+  QRCode,
+  Tooltip
 } from 'antd';
 import AntdSidebar from '@/components/admin/antd-sidebar';
 import QuestionnaireViewModal from '@/components/admin/questionnaire-view-modal';
 import ChannelQuestionnaireViewModal from '@/components/admin/channel-questionnaire-view-modal';
 import { exportChannelsToExcel } from '@/lib/export-utils';
-import dayjs from 'dayjs';
 
 const { Header, Content, Footer } = Layout;
 const { RangePicker } = DatePicker;
@@ -51,6 +52,8 @@ interface Channel {
   remark: string;
   shortLink: string;
   tags?: string[];
+  downloadLink: string;
+  isDefault: boolean;
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
@@ -80,24 +83,38 @@ export default function ChannelsPage() {
     startDate: '',
     endDate: ''
   });
-  const router = useRouter();
-  
+  // 添加搜索关键词状态
+  const [searchKeyword, setSearchKeyword] = useState('');
+  // 添加渠道链接状态
+  const [generatedLink, setGeneratedLink] = useState('');
+
   const {
     token: { colorBgContainer },
   } = theme.useToken();
+
+  // 监听渠道编号变化，实时更新生成的链接
+  useEffect(() => {
+    const channelNumber = form.getFieldValue('channelNumber');
+    if (channelNumber) {
+      const currentDomain = typeof window !== 'undefined' ? window.location.origin : 'https://loan.example.com';
+      setGeneratedLink(`${currentDomain}/h5?channelId=${channelNumber}`);
+    } else {
+      setGeneratedLink('');
+    }
+  }, [form.getFieldValue('channelNumber')]);
 
   // 获取渠道列表
   useEffect(() => {
     fetchChannels();
     fetchQuestionnaires();
-  }, [searchParams]);
+  }, []);
 
   // 获取问卷列表
   const fetchQuestionnaires = async () => {
     try {
       const response = await fetch('/api/admin/questionnaires');
       const data = await response.json();
-      
+
       if (response.ok) {
         setQuestionnaires(data.questionnaires);
       } else {
@@ -109,28 +126,33 @@ export default function ChannelsPage() {
     }
   };
 
-  const fetchChannels = async () => {
+  const fetchChannels = async (searchKeywordLocal?: string) => {
     try {
       setLoading(true);
       // 构建查询参数
       let url = '/api/admin/channels';
       const params = new URLSearchParams();
-      
+
       if (searchParams.startDate) {
         params.append('startDate', searchParams.startDate);
       }
-      
+
       if (searchParams.endDate) {
         params.append('endDate', searchParams.endDate);
       }
-      
+
+      // 添加搜索关键词参数
+      if (searchKeywordLocal !== undefined ? searchKeywordLocal : searchKeyword) {
+        params.append('search', searchKeywordLocal !== undefined ? searchKeywordLocal : searchKeyword);
+      }
+
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
-      
+
       const response = await fetch(url);
       const data = await response.json();
-      
+
       if (response.ok) {
         setChannels(data.channels);
       } else {
@@ -168,9 +190,9 @@ export default function ChannelsPage() {
       const response = await fetch(`/api/admin/channels?id=${id}`, {
         method: 'DELETE',
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
         message.success('渠道删除成功');
         fetchChannels(); // 重新获取渠道列表
@@ -187,7 +209,7 @@ export default function ChannelsPage() {
     try {
       const channel = channels.find(c => c.id === id);
       if (!channel) return;
-      
+
       const response = await fetch('/api/admin/channels', {
         method: 'PUT',
         headers: {
@@ -205,11 +227,11 @@ export default function ChannelsPage() {
           isActive: !currentStatus
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
-        setChannels(channels.map(channel => 
+        setChannels(channels.map(channel =>
           channel.id === id ? { ...channel, isActive: !currentStatus } : channel
         ));
         message.success(`渠道${!currentStatus ? '启用' : '禁用'}成功`);
@@ -229,10 +251,28 @@ export default function ChannelsPage() {
     });
   };
 
+  // 添加搜索处理函数
+  const handleSearch = () => {
+    fetchChannels();
+  };
+
+  // 添加重置搜索处理函数
+  const handleResetSearch = () => {
+    setSearchKeyword('');
+    setSearchParams({
+      startDate: '',
+      endDate: ''
+    });
+    // 重置后重新获取所有数据
+    setTimeout(() => {
+      fetchChannels('');
+    }, 0);
+  };
+
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
-      
+
       // 处理标签字段，兼容中英文逗号
       let tags = [];
       if (values.tags) {
@@ -241,7 +281,7 @@ export default function ChannelsPage() {
           .map((tag: string) => tag.trim())
           .filter(Boolean);
       }
-      
+
       if (editingChannel) {
         // 更新渠道
         const response = await fetch('/api/admin/channels', {
@@ -256,14 +296,16 @@ export default function ChannelsPage() {
             uvCount: editingChannel.uvCount,
             questionnaireSubmitCount: editingChannel.questionnaireSubmitCount,
             remark: values.remark,
-            shortLink: values.shortLink,
+            shortLink: values.shortLink, // 用户自定义的短链接
+            downloadLink: values.downloadLink,
+            isDefault: values.isDefault,
             tags,
             isActive: values.isActive
           }),
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
           message.success('渠道更新成功');
           fetchChannels(); // 重新获取渠道列表
@@ -279,12 +321,15 @@ export default function ChannelsPage() {
           },
           body: JSON.stringify({
             ...values,
-            tags
+            tags,
+            downloadLink: values.downloadLink,
+            isDefault: values.isDefault,
+            shortLink: values.shortLink // 用户自定义的短链接
           }),
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
           message.success('渠道创建成功');
           fetchChannels(); // 重新获取渠道列表
@@ -292,7 +337,7 @@ export default function ChannelsPage() {
           message.error(data.error || '创建渠道失败');
         }
       }
-      
+
       setIsModalVisible(false);
     } catch (error) {
       console.error('Failed to save channel:', error);
@@ -346,13 +391,13 @@ export default function ChannelsPage() {
       message.warning('没有可导出的数据');
       return;
     }
-    
+
     // 转换数据格式以匹配导出函数的要求
     const exportData = channels.map(channel => ({
       ...channel,
       questionnaireName: questionnaires.find(q => q.id === channel.questionnaireId)?.questionnaireName || ''
     }));
-    
+
     exportChannelsToExcel(exportData);
   };
 
@@ -366,6 +411,16 @@ export default function ChannelsPage() {
       title: '渠道名称',
       dataIndex: 'channelName',
       key: 'channelName',
+    },
+    {
+      title: '是否默认',
+      dataIndex: 'isDefault',
+      key: 'isDefault',
+      render: (isDefault: boolean) => (
+        <Tag color={isDefault ? 'green' : 'default'}>
+          {isDefault ? '是' : '否'}
+        </Tag>
+      ),
     },
     {
       title: '渠道标签',
@@ -400,7 +455,17 @@ export default function ChannelsPage() {
       key: 'shortLink',
       render: (link: string) => (
         <a href={link} target="_blank" rel="noopener noreferrer">
-          {link}
+          {link || '未设置'}
+        </a>
+      ),
+    },
+    {
+      title: 'app下载链接',
+      dataIndex: 'downloadLink',
+      key: 'downloadLink',
+      render: (link: string) => (
+        <a href={link} target="_blank" rel="noopener noreferrer">
+          {link || '未设置'}
         </a>
       ),
     },
@@ -421,8 +486,8 @@ export default function ChannelsPage() {
       key: 'isActive',
       fixed: 'right' as const,
       render: (isActive: boolean, record: Channel) => (
-        <Switch 
-          checked={isActive} 
+        <Switch
+          checked={isActive}
           onChange={() => handleToggleStatus(record.id, isActive)} />
       ),
     },
@@ -435,8 +500,8 @@ export default function ChannelsPage() {
           <Button type="link" onClick={() => handleEditChannel(record)}>编辑渠道</Button>
           <Button type="link" onClick={() => handleShowQRCode(record)}>下载二维码</Button>
           {record.questionnaireId && (
-            <Button 
-              type="link" 
+            <Button
+              type="link"
               onClick={() => handleViewChannelQuestionnaire(record)}
             >
               查看选题
@@ -449,7 +514,7 @@ export default function ChannelsPage() {
 
   return (
     <Layout hasSider className="min-h-screen">
-      <AntdSidebar 
+      <AntdSidebar
         isCollapsed={isSidebarCollapsed}
         onToggle={toggleSidebar}
       />
@@ -457,7 +522,7 @@ export default function ChannelsPage() {
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <Content style={{ margin: '24px 16px 0' }}>
           <div style={{ padding: 24, minHeight: 360, background: colorBgContainer }}>
-            <Card 
+            <Card
               title={
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <LinkOutlined style={{ marginRight: 8 }} />
@@ -466,8 +531,8 @@ export default function ChannelsPage() {
               }
               extra={
                 <Space>
-                  <Button 
-                    icon={<DownloadOutlined />} 
+                  <Button
+                    icon={<DownloadOutlined />}
                     onClick={handleExportChannels}
                   >
                     导出数据
@@ -481,14 +546,32 @@ export default function ChannelsPage() {
               {/* 添加筛选控件 */}
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }} justify="end">
                 <Col>
-                  <RangePicker 
+                  <Input
+                    placeholder="请输入渠道编号搜索"
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    style={{ width: 200 }}
+                  />
+                </Col>
+                <Col>
+                  <RangePicker
                     onChange={handleDateChange}
                     placeholder={['开始日期', '结束日期']}
                     format="YYYY-MM-DD"
                   />
                 </Col>
+                <Col>
+                  <Space>
+                    <Button type="primary" onClick={handleSearch}>
+                      查询
+                    </Button>
+                    <Button onClick={handleResetSearch}>
+                      重置
+                    </Button>
+                  </Space>
+                </Col>
               </Row>
-              
+
               <div style={{ overflowX: 'auto' }}>
                 <Spin spinning={loading}>
                   <Table
@@ -511,7 +594,7 @@ export default function ChannelsPage() {
           Admin 管理后台 ©{new Date().getFullYear()}
         </Footer>
       </Layout>
-      
+
       <Modal
         title={editingChannel ? "编辑渠道" : "添加渠道"}
         open={isModalVisible}
@@ -521,19 +604,30 @@ export default function ChannelsPage() {
         cancelText="取消"
       >
         <Form form={form} layout="vertical">
-          <Form.Item 
-            label="渠道编号" 
+          <Form.Item
+            label="渠道编号"
             name="channelNumber"
             rules={[{ required: true, message: '请输入渠道编号' }]}
           >
             <Input placeholder="请输入渠道编号" />
           </Form.Item>
-          <Form.Item 
-            label="渠道名称" 
+          <Form.Item
+            label="渠道名称"
             name="channelName"
             rules={[{ required: true, message: '请输入渠道名称' }]}
           >
             <Input placeholder="请输入渠道名称" />
+          </Form.Item>
+          <Form.Item
+            label="是否默认渠道"
+            name="isDefault"
+            valuePropName="checked"
+            initialValue={editingChannel ? editingChannel.isDefault : false}
+          >
+            <Switch
+              checkedChildren="是"
+              unCheckedChildren="否"
+            />
           </Form.Item>
           <Form.Item label="渠道标签" name="tags">
             <Input placeholder="请输入渠道标签，多个标签用逗号分隔" />
@@ -550,45 +644,52 @@ export default function ChannelsPage() {
           <Form.Item label="备注" name="remark">
             <Input.TextArea placeholder="请输入备注" />
           </Form.Item>
-          {/* 短链接字段 - 添加生成按钮 */}
-          <Form.Item label="短链接">
-            <Space.Compact>
-              <Form.Item
-                name="shortLink"
-                noStyle
-                rules={[{ required: false }]}
-              >
-                <Input 
-                  style={{ width: 'calc(100% - 100px)' }} 
-                  placeholder="点击生成按钮根据渠道编号自动生成"
+          {/* 渠道链接字段 - 禁用状态，根据渠道编号自动生成 */}
+          <Form.Item label="渠道链接">
+            <Input.Group compact>
+              <Input 
+                style={{ width: 'calc(100% - 32px)' }}
+                disabled
+                value={generatedLink}
+                placeholder="填写渠道编号后自动生成"
+              />
+              <Tooltip title="复制链接">
+                <Button 
+                  icon={<CopyOutlined />} 
+                  onClick={() => {
+                    if (generatedLink) {
+                      navigator.clipboard.writeText(generatedLink);
+                      message.success('链接已复制到剪贴板');
+                    } else {
+                      message.warning('没有可复制的链接');
+                    }
+                  }}
                 />
-              </Form.Item>
-              <Button 
-                type="primary" 
-                onClick={() => {
-                  const channelNumber = form.getFieldValue('channelNumber');
-                  if (channelNumber) {
-                    form.setFieldsValue({
-                      shortLink: `https://loan.example.com/${channelNumber}`
-                    });
-                  } else {
-                    message.warning('请先输入渠道编号');
-                  }
-                }}
-              >
-                生成
-              </Button>
-            </Space.Compact>
+              </Tooltip>
+            </Input.Group>
           </Form.Item>
-          <Form.Item 
-            label="是否启用" 
+          {/* 短链接字段 - 可自行填入 */}
+          <Form.Item
+            label="短链接"
+            name="shortLink"
+          >
+            <Input placeholder="请输入短链接" />
+          </Form.Item>
+          <Form.Item
+            label="app下载链接"
+            name="downloadLink"
+          >
+            <Input placeholder="请输入app下载链接" />
+          </Form.Item>
+          <Form.Item
+            label="是否启用"
             name="isActive"
             valuePropName="checked"
             initialValue={editingChannel ? editingChannel.isActive : true}
           >
-            <Switch 
-              checkedChildren="启用" 
-              unCheckedChildren="禁用" 
+            <Switch
+              checkedChildren="启用"
+              unCheckedChildren="禁用"
             />
           </Form.Item>
         </Form>
@@ -603,9 +704,9 @@ export default function ChannelsPage() {
           <Button key="close" onClick={() => setIsQRModalVisible(false)}>
             关闭
           </Button>,
-          <Button 
-            key="download" 
-            type="primary" 
+          <Button
+            key="download"
+            type="primary"
             onClick={() => selectedChannel && handleDownloadQRCode(selectedChannel)}
           >
             下载二维码
@@ -618,13 +719,13 @@ export default function ChannelsPage() {
             <p>渠道名称: {selectedChannel.channelName}</p>
             <div className="flex justify-center">
               <div id={`qr-code-${selectedChannel.id}`}>
-              <QRCode 
-                className='flex-1'
-                value={selectedChannel.shortLink} 
-                size={200}
-                bordered={false}
-              />
-            </div>
+                <QRCode
+                  className='flex-1'
+                  value={selectedChannel.shortLink}
+                  size={200}
+                  bordered={false}
+                />
+              </div>
             </div>
             <p style={{ marginTop: 16 }}>
               <a href={selectedChannel.shortLink} target="_blank" rel="noopener noreferrer">
@@ -641,7 +742,7 @@ export default function ChannelsPage() {
         onCancel={() => setIsQuestionnaireModalVisible(false)}
         questionnaireId={selectedQuestionnaireId || undefined}
       />
-      
+
       {/* 渠道问卷查看模态框（带用户选择） */}
       <ChannelQuestionnaireViewModal
         open={isChannelQuestionnaireModalVisible}

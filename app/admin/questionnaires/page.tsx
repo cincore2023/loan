@@ -54,6 +54,8 @@ export default function QuestionnairesPage() {
   const [loading, setLoading] = useState(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  // 添加搜索关键词状态（用于按钮点击搜索）
+  const [searchKeyword, setSearchKeyword] = useState('');
   const router = useRouter();
   
   const {
@@ -63,7 +65,7 @@ export default function QuestionnairesPage() {
   // 获取问卷列表
   useEffect(() => {
     fetchQuestionnaires();
-  }, []);
+  }, [searchKeyword]);
 
   const fetchQuestionnaires = async () => {
     try {
@@ -73,9 +75,19 @@ export default function QuestionnairesPage() {
       
       if (response.ok) {
         // 按问卷编号倒序排列
-        const sortedQuestionnaires = data.questionnaires.sort((a: Questionnaire, b: Questionnaire) => {
+        let sortedQuestionnaires = data.questionnaires.sort((a: Questionnaire, b: Questionnaire) => {
           return b.questionnaireNumber.localeCompare(a.questionnaireNumber);
         });
+        
+        // 添加搜索过滤逻辑
+        if (searchKeyword) {
+          sortedQuestionnaires = sortedQuestionnaires.filter((q: Questionnaire) => 
+            q.questionnaireNumber.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+            q.questionnaireName.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+            (q.remark && q.remark.toLowerCase().includes(searchKeyword.toLowerCase()))
+          );
+        }
+        
         setQuestionnaires(sortedQuestionnaires);
       } else {
         message.error(data.error || '获取问卷列表失败');
@@ -146,16 +158,16 @@ export default function QuestionnairesPage() {
     }
   };
 
-  // 添加搜索过滤逻辑
-  const filteredQuestionnaires = useMemo(() => {
-    if (!searchTerm) return questionnaires;
-    
-    return questionnaires.filter(q => 
-      q.questionnaireNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      q.questionnaireName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (q.remark && q.remark.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  }, [questionnaires, searchTerm]);
+  // 添加搜索处理函数
+  const handleSearch = () => {
+    setSearchKeyword(searchTerm);
+  };
+
+  // 添加重置搜索处理函数
+  const handleResetSearch = () => {
+    setSearchTerm('');
+    setSearchKeyword('');
+  };
 
   const columns = [
     {
@@ -230,11 +242,21 @@ export default function QuestionnairesPage() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                   />
                 </Col>
+                <Col xs={24} sm={12} md={4}>
+                  <Space>
+                    <Button type="primary" onClick={handleSearch}>
+                      查询
+                    </Button>
+                    <Button onClick={handleResetSearch}>
+                      重置
+                    </Button>
+                  </Space>
+                </Col>
               </Row>
               <Spin spinning={loading}>
                 <Table
                   columns={columns}
-                  dataSource={filteredQuestionnaires}
+                  dataSource={questionnaires}
                   pagination={{
                     pageSize: 10,
                     showSizeChanger: true,
