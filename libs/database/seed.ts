@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { admins, questionnaires, channels } from './schema';
 import { hashPassword } from '@/libs/auth/password';
+import { sql } from 'drizzle-orm';
 
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/loan_db';
 const client = postgres(connectionString);
@@ -90,8 +91,29 @@ async function seed() {
       }
     } else {
       console.log('渠道已存在，跳过创建');
+      // 检查是否存在默认渠道，如果不存在则创建一个
+      const defaultChannel = await db.select().from(channels).where(sql`channel_name = '默认渠道'`).limit(1);
+      if (defaultChannel.length === 0) {
+        // 获取问卷ID
+        const questionnaire = await db.select().from(questionnaires).limit(1);
+        
+        if (questionnaire.length > 0) {
+          // 添加默认渠道
+          const channelResult = await db.insert(channels).values({
+            channelNumber: 'CH001',
+            channelName: '默认渠道',
+            questionnaireId: questionnaire[0].id,
+            remark: '默认测试渠道',
+            shortLink: 'https://loan.example.com/ch001',
+            isActive: true,
+            isDefault: true
+          }).returning();
+          
+          console.log('默认渠道创建成功:', channelResult[0]);
+        }
+      }
     }
-    
+
     // 注意：默认客户不创建
     
     console.log('种子数据添加完成');

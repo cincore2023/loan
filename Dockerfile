@@ -19,8 +19,8 @@ COPY . .
 # 构建 Next.js 应用
 RUN pnpm run build
 
-# 删除开发依赖以减小镜像大小
-RUN pnpm prune --prod
+# 注意：我们不再删除 devDependencies，因为运行时需要它们
+# RUN pnpm prune --prod
 
 # 暴露端口
 EXPOSE 3000

@@ -17,23 +17,6 @@ services:
     networks:
       - loan_network
 
-  # Next.js 应用
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: loan_app
-    restart: always
-    ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/loan_db
-      - NODE_ENV=production
-    depends_on:
-      - postgres
-    networks:
-      - loan_network
-
 volumes:
   postgres_data:
 

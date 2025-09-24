@@ -101,7 +101,7 @@ export default function ChannelsPage() {
     } else {
       setGeneratedLink('');
     }
-  }, [form.getFieldValue('channelNumber')]);
+  }, [form, form.getFieldValue('channelNumber')]);
 
   // 获取渠道列表
   useEffect(() => {
@@ -609,7 +609,14 @@ export default function ChannelsPage() {
             name="channelNumber"
             rules={[{ required: true, message: '请输入渠道编号' }]}
           >
-            <Input placeholder="请输入渠道编号" />
+            <Input 
+              placeholder="请输入渠道编号" 
+              onChange={(e) => {
+                // 手动触发链接更新
+                const currentDomain = typeof window !== 'undefined' ? window.location.origin : 'https://loan.example.com';
+                setGeneratedLink(e.target.value ? `${currentDomain}/h5?channelId=${e.target.value}` : '');
+              }}
+            />
           </Form.Item>
           <Form.Item
             label="渠道名称"
