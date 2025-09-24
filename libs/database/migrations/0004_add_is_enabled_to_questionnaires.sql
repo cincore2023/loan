@@ -1,1 +1,0 @@
-ALTER TABLE "questionnaires" ADD COLUMN "is_enabled" boolean DEFAULT true NOT NULL;

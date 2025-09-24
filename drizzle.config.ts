@@ -5,6 +5,6 @@ export default {
   schema: './libs/database/schema.ts',
   out: './libs/database/migrations',
   dbCredentials: {
-    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/loan_db',
+    url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/loan_db',
   },
 } satisfies Config;

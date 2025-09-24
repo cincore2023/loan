@@ -16,6 +16,9 @@ CREATE TABLE "channels" (
 	"questionnaire_submit_count" integer DEFAULT 0,
 	"remark" text,
 	"short_link" text,
+	"tags" jsonb,
+	"download_link" text,
+	"is_default" boolean DEFAULT false,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"is_active" boolean DEFAULT true,
@@ -25,8 +28,7 @@ CREATE TABLE "channels" (
 --> statement-breakpoint
 CREATE TABLE "customers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"customer_number" text NOT NULL,
-	"customer_name" text NOT NULL,
+	"customer_name" text,
 	"application_amount" text,
 	"province" text,
 	"city" text,
@@ -35,10 +37,10 @@ CREATE TABLE "customers" (
 	"id_card" text,
 	"submission_time" timestamp,
 	"questionnaire_id" uuid,
+	"selected_questions" jsonb,
 	"channel_link" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "customers_customer_number_unique" UNIQUE("customer_number")
+	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "questionnaires" (

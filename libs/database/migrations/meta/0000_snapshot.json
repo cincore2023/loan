@@ -1,5 +1,5 @@
 {
-  "id": "a5e557e4-e534-4893-8a35-20533b73a527",
+  "id": "813f03ad-2c54-4299-808b-cceb3ba61125",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -111,6 +111,25 @@
           "primaryKey": false,
           "notNull": false
         },
+        "tags": {
+          "name": "tags",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "download_link": {
+          "name": "download_link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_default": {
+          "name": "is_default",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -181,17 +200,11 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "customer_number": {
-          "name": "customer_number",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "customer_name": {
           "name": "customer_name",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "application_amount": {
           "name": "application_amount",
@@ -241,6 +254,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "selected_questions": {
+          "name": "selected_questions",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "channel_link": {
           "name": "channel_link",
           "type": "text",
@@ -279,15 +298,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "customers_customer_number_unique": {
-          "name": "customers_customer_number_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "customer_number"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

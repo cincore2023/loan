@@ -13,6 +13,7 @@ import {
   message,
   Spin
 } from 'antd';
+import { Suspense } from 'react';
 import AntdSidebar from '@/components/admin/antd-sidebar';
 import QuestionnaireForm, { QuestionnaireFormRef } from '@/components/admin/questionnaire-form';
 
@@ -49,7 +50,8 @@ interface QuestionnaireFormData {
   updatedAt?: string;
 }
 
-export default function QuestionnaireFormPage() {
+// 创建一个包装组件来处理 useSearchParams
+function QuestionnaireFormContent() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [questionnaire, setQuestionnaire] = useState<Questionnaire | null>(null);
@@ -233,5 +235,14 @@ export default function QuestionnaireFormPage() {
         </Footer>
       </Layout>
     </Layout>
+  );
+}
+
+// 主组件包装在 Suspense 中
+export default function QuestionnaireFormPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <QuestionnaireFormContent />
+    </Suspense>
   );
 }

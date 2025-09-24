@@ -1,1 +1,0 @@
-ALTER TABLE "channels" ADD COLUMN "custom_short_link" text;

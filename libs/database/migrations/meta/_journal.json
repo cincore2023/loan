@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1758448916358,
-      "tag": "0000_crazy_gamma_corps",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1758449002717,
-      "tag": "0001_gifted_the_order",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1758449641119,
-      "tag": "0002_many_mentallo",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1758463373711,
-      "tag": "0003_ancient_living_tribunal",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1758471336988,
-      "tag": "0004_common_arachne",
+      "when": 1758684468449,
+      "tag": "0000_heavy_wendigo",
       "breakpoints": true
     }
   ]

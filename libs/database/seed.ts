@@ -1,9 +1,9 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { admins, questionnaires, channels, customers, products } from './schema';
+import { admins, questionnaires, channels } from './schema';
 import { hashPassword } from '@/libs/auth/password';
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/loan_db';
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/loan_db';
 const client = postgres(connectionString);
 const db = drizzle(client);
 
@@ -36,7 +36,7 @@ async function seed() {
     if (existingQuestionnaires.length === 0) {
       // 添加默认问卷
       const questionnaireResult = await db.insert(questionnaires).values({
-        questionnaireNumber: 'QN001' as const,
+        questionnaireNumber: 'QN001',
         questionnaireName: '贷款申请问卷',
         remark: '默认贷款申请问卷',
         questions: [
@@ -48,8 +48,7 @@ async function seed() {
               { id: 'o2', text: '26-35岁' },
               { id: 'o3', text: '36-45岁' },
               { id: 'o4', text: '46岁以上' }
-            ],
-            correctOptionId: ''
+            ]
           },
           {
             id: 'q2',
@@ -59,8 +58,7 @@ async function seed() {
               { id: 'o2', text: '5000-10000元' },
               { id: 'o3', text: '10000-20000元' },
               { id: 'o4', text: '20000元以上' }
-            ],
-            correctOptionId: ''
+            ]
           }
         ]
       }).returning();
@@ -93,6 +91,8 @@ async function seed() {
     } else {
       console.log('渠道已存在，跳过创建');
     }
+    
+    // 注意：默认客户不创建
     
     console.log('种子数据添加完成');
   } catch (error) {
