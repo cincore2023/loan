@@ -104,7 +104,7 @@ async function seed() {
             channelName: '默认渠道',
             questionnaireId: questionnaire[0].id,
             remark: '默认测试渠道',
-            shortLink: 'https://loan.example.com/ch001',
+            shortLink: '',
             isActive: true,
             isDefault: true
           }).returning();

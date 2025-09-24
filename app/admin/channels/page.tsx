@@ -653,7 +653,7 @@ export default function ChannelsPage() {
           </Form.Item>
           {/* 渠道链接字段 - 禁用状态，根据渠道编号自动生成 */}
           <Form.Item label="渠道链接">
-            <Input.Group compact>
+            <Space.Compact style={{ width: '100%' }}>
               <Input 
                 style={{ width: 'calc(100% - 32px)' }}
                 disabled
@@ -673,7 +673,7 @@ export default function ChannelsPage() {
                   }}
                 />
               </Tooltip>
-            </Input.Group>
+            </Space.Compact>
           </Form.Item>
           {/* 短链接字段 - 可自行填入 */}
           <Form.Item
