@@ -121,12 +121,11 @@ export default function LoanInfo() {
       if (response.ok) {
         // 提交成功，清除store中的临时数据
         h5Store.clearData('customerId');
-        h5Store.clearData('applicationAmount');
         h5Store.clearData('channelInfo');
         h5Store.clearData('questionnaire');
         
         // 跳转到首页
-        router.push('/h5');
+        router.push('/h5/superLoan');
       } else {
         throw new Error(result.error || '提交失败');
       }

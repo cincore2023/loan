@@ -199,7 +199,7 @@ export default function PersonalInfoForm({ customerId, onSubmit, onCancel }: Per
 
       {/* 地址选择器弹窗 */}
       {showAddressPicker && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end z-50">
+        <div className="fixed inset-0 bg-[#000000ab] bg-opacity-30 flex items-end z-50">
           <div className="bg-white w-full rounded-t-lg p-4 max-h-[70vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <div></div>
@@ -216,7 +216,7 @@ export default function PersonalInfoForm({ customerId, onSubmit, onCancel }: Per
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">省份</label>
                 <select
-                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800 bg-white"
                   value={province}
                   onChange={handleProvinceChange}
                 >
@@ -231,7 +231,7 @@ export default function PersonalInfoForm({ customerId, onSubmit, onCancel }: Per
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">城市</label>
                   <select
-                    className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                    className="w-full p-3 border border-gray-300 rounded-md text-gray-800 bg-white"
                     value={city}
                     onChange={handleCityChange}
                   >
