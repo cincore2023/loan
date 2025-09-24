@@ -9,25 +9,35 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const channelId = searchParams.get('channelId');
     
-    if (!channelId) {
-      return NextResponse.json({ error: '缺少渠道ID参数' }, { status: 400 });
-    }
-    
     // 查找渠道信息（支持按ID或渠道编号查找）
-    let channel;
-    if (channelId.startsWith('CH')) {
-      // 按渠道编号查找
-      channel = await db.select().from(channels).where(eq(channels.channelNumber, channelId)).limit(1);
-    } else {
-      // 按渠道ID查找
-      channel = await db.select().from(channels).where(eq(channels.id, channelId)).limit(1);
+    let channelData = null;
+    
+    if (channelId) {
+      if (channelId.startsWith('CH')) {
+        // 按渠道编号查找
+        const channel = await db.select().from(channels).where(eq(channels.channelNumber, channelId)).limit(1);
+        if (channel.length > 0) {
+          channelData = channel[0];
+        }
+      } else {
+        // 按渠道ID查找
+        const channel = await db.select().from(channels).where(eq(channels.id, channelId)).limit(1);
+        if (channel.length > 0) {
+          channelData = channel[0];
+        }
+      }
     }
     
-    if (channel.length === 0) {
-      return NextResponse.json({ error: '渠道不存在' }, { status: 404 });
+    // 如果没有提供渠道ID或找不到指定渠道，则使用默认渠道
+    if (!channelData) {
+      const defaultChannel = await db.select().from(channels).where(eq(channels.channelNumber, 'CH001')).limit(1);
+      if (defaultChannel.length > 0) {
+        channelData = defaultChannel[0];
+      } else {
+        // 如果连默认渠道都找不到，返回错误
+        return NextResponse.json({ error: '未找到默认渠道' }, { status: 404 });
+      }
     }
-    
-    const channelData = channel[0];
     
     // 获取绑定的问卷信息
     let questionnaireData = null;

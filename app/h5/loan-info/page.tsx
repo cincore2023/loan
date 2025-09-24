@@ -198,7 +198,7 @@ export default function LoanInfo() {
       </div>
 
       {/* 问题内容 */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
         <h1 className="text-xl font-bold text-center mb-8 text-gray-800">
           {currentQuestion.title}
         </h1>

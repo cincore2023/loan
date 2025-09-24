@@ -139,7 +139,7 @@ export default function Register() {
       </div>
       
       {/* 登录表单容器 */}
-      <div className="my-2 p-4 pt-4 pb-6 bg-white rounded-lg">
+      <div className="my-4 p-4 pt-4 pb-6 bg-white rounded-lg">
         <input 
           type="text" 
           placeholder="请输入手机号" 

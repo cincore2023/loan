@@ -17,21 +17,30 @@ export default function H5Home() {
         const urlParams = new URLSearchParams(window.location.search);
         const channelId = urlParams.get('channelId');
         
-        if (!channelId) {
-          setError('缺少渠道ID参数');
-          setLoading(false);
-          return;
+        let finalChannelId = channelId;
+        
+        // 如果没有渠道ID，从API获取默认渠道
+        if (!finalChannelId) {
+          const defaultChannelResponse = await fetch('/api/h5/default-channel');
+          const defaultChannelData = await defaultChannelResponse.json();
+          
+          if (defaultChannelResponse.ok && defaultChannelData.channel) {
+            finalChannelId = defaultChannelData.channel.id;
+          } else {
+            // 如果API获取失败，回退到硬编码的默认值
+            finalChannelId = 'CH001';
+          }
         }
         
         // 调用 API 获取渠道和问卷信息
-        const response = await fetch(`/api/h5/questionnaire?channelId=${channelId}`);
+        const response = await fetch(`/api/h5/questionnaire?channelId=${finalChannelId}`);
         const data = await response.json();
         
         if (response.ok) {
           // 将问卷数据存储到store中
           h5Store.setData('channelInfo', data.channel);
           h5Store.setData('questionnaire', data.questionnaire);
-          h5Store.setData('channelId', channelId);
+          h5Store.setData('channelId', finalChannelId);
           
           // 成功获取问卷信息，跳转到注册页面
           router.push(`/h5/register`);

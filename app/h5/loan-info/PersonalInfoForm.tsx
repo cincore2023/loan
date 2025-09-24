@@ -173,7 +173,7 @@ export default function PersonalInfoForm({ customerId, onSubmit, onCancel }: Per
           </div>
 
           {/* 操作按钮 */}
-          <div className="flex space-x-4">
+          <div className="flex space-x-4 mt-6">
             <div 
               className="flex-1 py-3 bg-gray-300 text-gray-800 text-center rounded-md font-medium"
               onClick={onCancel}

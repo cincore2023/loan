@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/libs/database/db';
-import { customers, questionnaires } from '@/libs/database/schema';
+import { customers, questionnaires, channels } from '@/libs/database/schema';
 import { desc, like, and, gte, lte, eq, isNull, isNotNull, or } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
@@ -308,6 +308,23 @@ export async function PUT(request: NextRequest) {
       channelLink: validatedData.channelLink || existingCustomer[0].channelLink,
       updatedAt: new Date(),
     }).where(eq(customers.id, body.id)).returning();
+    
+    // 如果这是第一次提交完整的个人信息（之前没有提交时间或者selectedQuestions为空），则更新渠道的问卷填写总数
+    const isFirstSubmission = !existingCustomer[0].submissionTime || 
+                             !existingCustomer[0].selectedQuestions || 
+                             existingCustomer[0].selectedQuestions.length === 0;
+    
+    if (isFirstSubmission && validatedData.channelLink) {
+      // 根据渠道链接找到对应的渠道，并增加问卷填写总数
+      const channel = await db.select().from(channels).where(eq(channels.shortLink, validatedData.channelLink)).limit(1);
+      
+      if (channel.length > 0) {
+        await db.update(channels).set({
+          questionnaireSubmitCount: (channel[0].questionnaireSubmitCount || 0) + 1,
+          updatedAt: new Date()
+        }).where(eq(channels.id, channel[0].id));
+      }
+    }
     
     return NextResponse.json(updatedCustomer[0]);
   } catch (error) {

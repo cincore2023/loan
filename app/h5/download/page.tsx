@@ -15,58 +15,57 @@ const DownloadPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f8f8f8] flex flex-col items-center justify-center p-3">
+    <div className="min-h-screen bg-[#f8f8f8] flex flex-col items-center justify-center p-4">
       {/* 额度展示 */}
-      <div className="bg-white rounded-2xl p-4 w-full max-w-md mb-4 shadow-sm border border-gray-100">
-        <div className="text-center mb-2">
-          <div className="inline-block bg-blue-50 rounded-full px-2 py-0.5">
-            <span className="text-blue-600 text-xs font-medium">专属额度</span>
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md mb-6 shadow-sm border border-gray-100">
+        <div className="text-center mb-4">
+          <div className="inline-block bg-blue-50 rounded-full px-3 py-1">
+            <span className="text-blue-600 text-sm font-medium">专属额度</span>
           </div>
         </div>
-        <h1 className="text-base font-bold text-gray-800 mb-1 text-center">您的贷款额度</h1>
-        <p className="text-green-600 text-xs font-medium text-center mb-2">恭喜你，已通过初审，下载app立即提现</p>
-        <div className="text-3xl font-bold text-center text-blue-600 my-1">{applicationAmount}</div>
-        <div className="text-sm text-center text-gray-500 mb-1">元</div>
-        <div className="text-center text-green-500 text-xs font-medium">
-          <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>
+        <h1 className="text-xl font-bold text-gray-800 mb-2 text-center">您的贷款额度</h1>
+        <p className="text-green-600 text-sm font-medium text-center mb-4">恭喜你，已通过初审，下载app立即提现</p>
+        <div className="text-4xl font-bold text-center text-blue-600 my-2">¥{applicationAmount}</div>
+        <div className="text-center text-green-500 text-sm font-medium mt-4">
+          <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span>
           额度已激活
         </div>
       </div>
 
       {/* 服务说明 */}
-      <div className="bg-white rounded-2xl p-3 shadow-sm w-full max-w-md mb-4 border border-gray-100">
-        <h2 className="text-base font-bold text-gray-800 mb-2 text-center">服务说明</h2>
-        <div className="space-y-2">
-          <div className="flex items-start bg-blue-50 rounded-lg p-2">
-            <div className="bg-blue-600 rounded-full w-4 h-4 flex items-center justify-center mt-0.5 mr-2 flex-shrink-0">
-              <span className="text-white text-[10px] font-bold">1</span>
+      <div className="bg-white rounded-2xl p-5 shadow-sm w-full max-w-md mb-6 border border-gray-100">
+        <h2 className="text-lg font-bold text-gray-800 mb-4 text-center">服务说明</h2>
+        <div className="space-y-3">
+          <div className="flex items-start bg-blue-50 rounded-lg p-3">
+            <div className="bg-blue-600 rounded-full w-5 h-5 flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
+              <span className="text-white text-xs font-bold">1</span>
             </div>
-            <p className="text-gray-700 text-xs">额度实时审批，最快1小时内完成审核</p>
+            <p className="text-gray-700 text-sm">额度实时审批，最快1小时内完成审核</p>
           </div>
-          <div className="flex items-start bg-blue-50 rounded-lg p-2">
-            <div className="bg-blue-600 rounded-full w-4 h-4 flex items-center justify-center mt-0.5 mr-2 flex-shrink-0">
-              <span className="text-white text-[10px] font-bold">2</span>
+          <div className="flex items-start bg-blue-50 rounded-lg p-3">
+            <div className="bg-blue-600 rounded-full w-5 h-5 flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
+              <span className="text-white text-xs font-bold">2</span>
             </div>
-            <p className="text-gray-700 text-xs">资金安全托管，银行级别安全保障</p>
+            <p className="text-gray-700 text-sm">资金安全托管，银行级别安全保障</p>
           </div>
-          <div className="flex items-start bg-blue-50 rounded-lg p-2">
-            <div className="bg-blue-600 rounded-full w-4 h-4 flex items-center justify-center mt-0.5 mr-2 flex-shrink-0">
-              <span className="text-white text-[10px] font-bold">3</span>
+          <div className="flex items-start bg-blue-50 rounded-lg p-3">
+            <div className="bg-blue-600 rounded-full w-5 h-5 flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
+              <span className="text-white text-xs font-bold">3</span>
             </div>
-            <p className="text-gray-700 text-xs">灵活还款方式，支持提前还款无手续费</p>
+            <p className="text-gray-700 text-sm">灵活还款方式，支持提前还款无手续费</p>
           </div>
-          <div className="flex items-start bg-blue-50 rounded-lg p-2">
-            <div className="bg-blue-600 rounded-full w-4 h-4 flex items-center justify-center mt-0.5 mr-2 flex-shrink-0">
-              <span className="text-white text-[10px] font-bold">4</span>
+          <div className="flex items-start bg-blue-50 rounded-lg p-3">
+            <div className="bg-blue-600 rounded-full w-5 h-5 flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
+              <span className="text-white text-xs font-bold">4</span>
             </div>
-            <p className="text-gray-700 text-xs">7×24小时客服支持，随时为您解答疑问</p>
+            <p className="text-gray-700 text-sm">7×24小时客服支持，随时为您解答疑问</p>
           </div>
         </div>
       </div>
 
       {/* 下载按钮 */}
       <button 
-        className="bg-blue-600 text-white font-bold py-3 px-6 rounded-full text-base w-full max-w-md shadow-md hover:opacity-90 transition-opacity mb-4"
+        className="bg-blue-600 text-white font-bold py-4 px-8 rounded-full text-lg w-full max-w-md shadow-md hover:opacity-90 transition-opacity mb-6"
         onClick={() => {
           // 模拟下载操作
           alert('开始下载...');
@@ -77,21 +76,21 @@ const DownloadPage = () => {
 
       {/* 服务优势 */}
       <div className="text-center text-gray-600 w-full max-w-md">
-        <div className="flex justify-center space-x-3 mb-2">
+        <div className="flex justify-center space-x-4 mb-3">
           <div className="flex items-center">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></div>
-            <span className="text-[10px]">安全可靠</span>
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            <span className="text-xs">安全可靠</span>
           </div>
           <div className="flex items-center">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></div>
-            <span className="text-[10px]">极速放款</span>
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            <span className="text-xs">极速放款</span>
           </div>
           <div className="flex items-center">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></div>
-            <span className="text-[10px]">全天候服务</span>
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            <span className="text-xs">全天候服务</span>
           </div>
         </div>
-        <p className="text-[10px] text-gray-500">© 2025 金融服务平台 版权所有</p>
+        <p className="text-xs text-gray-500">© 2025 金融服务平台 版权所有</p>
       </div>
     </div>
   );
