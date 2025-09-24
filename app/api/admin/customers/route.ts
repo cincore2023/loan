@@ -24,6 +24,7 @@ const customerSchema = z.object({
     selectedOptionText: z.string(),
   })).optional(),
   channelLink: z.string().optional(),
+  channelId: z.string().optional(), // 添加渠道ID字段
 });
 
 export async function GET(request: Request) {
@@ -314,11 +315,19 @@ export async function PUT(request: NextRequest) {
                              !existingCustomer[0].selectedQuestions || 
                              existingCustomer[0].selectedQuestions.length === 0;
     
-    if (isFirstSubmission && validatedData.channelLink) {
-      // 根据渠道链接找到对应的渠道，并增加问卷填写总数
-      const channel = await db.select().from(channels).where(eq(channels.shortLink, validatedData.channelLink)).limit(1);
+    if (isFirstSubmission) {
+      // 优先使用渠道ID，如果没有则尝试使用渠道链接
+      let channel = null;
       
-      if (channel.length > 0) {
+      if (validatedData.channelId) {
+        // 根据渠道ID找到对应的渠道
+        channel = await db.select().from(channels).where(eq(channels.id, validatedData.channelId)).limit(1);
+      } else if (validatedData.channelLink) {
+        // 根据渠道链接找到对应的渠道
+        channel = await db.select().from(channels).where(eq(channels.shortLink, validatedData.channelLink)).limit(1);
+      }
+      
+      if (channel && channel.length > 0) {
         await db.update(channels).set({
           questionnaireSubmitCount: (channel[0].questionnaireSubmitCount || 0) + 1,
           updatedAt: new Date()

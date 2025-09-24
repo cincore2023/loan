@@ -99,6 +99,10 @@ export default function LoanInfo() {
         };
       });
       
+      // 从store获取渠道信息
+      const channelInfo = h5Store.getData('channelInfo');
+      const channelId = h5Store.getData('channelId');
+      
       // 更新客户资料，添加用户选择的答案和个人信息
       const response = await fetch(`/api/admin/customers`, {
         method: 'PUT',
@@ -112,7 +116,8 @@ export default function LoanInfo() {
           province: data.province,
           city: data.city,
           district: data.district,
-          selectedQuestions: selectedQuestions
+          selectedQuestions: selectedQuestions,
+          channelId: channelId || channelInfo?.id || '' // 传递渠道ID
         }),
       });
       
