@@ -63,7 +63,6 @@ interface Customer {
   selectedQuestions?: CustomerSelectedQuestion[] | null;
   questionnaireId?: string | null;
   questionnaireName?: string | null;
-  channelName?: string | null; // 添加渠道名称字段
 }
 
 interface CustomerQuestionViewModalProps {
@@ -129,7 +128,7 @@ export default function CustomerQuestionViewModal({
               </Descriptions.Item>
               <Descriptions.Item label="手机号">{customer.phoneNumber}</Descriptions.Item>
               <Descriptions.Item label="身份证">{customer.idCard}</Descriptions.Item>
-              <Descriptions.Item label="渠道">{customer.channelName || customer.channelLink || '未填写'}</Descriptions.Item>
+              <Descriptions.Item label="渠道">{customer.channelLink || '未填写'}</Descriptions.Item>
               <Descriptions.Item label="问卷名称">{customer.questionnaireName || '未填写'}</Descriptions.Item>
               <Descriptions.Item label="提交时间">
                 {formatDateTime(customer.submissionTime, 'YYYY-MM-DD HH:mm:ss')}

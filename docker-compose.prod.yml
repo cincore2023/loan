@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15
+    container_name: loan_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-loan_db}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      # 使用命名卷持久化数据库数据
+      - postgres_data:/var/lib/postgresql/data
+      # 可选：挂载初始化脚本目录
+      # - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - loan_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js 应用
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: loan_app
+    restart: always
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-loan_db}
+      - NODE_ENV=production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - loan_network
+    # 不要挂载整个应用目录，这样会覆盖容器内的文件
+    # 如果需要挂载特定配置文件，可以使用 volumes
+
+volumes:
+  # 命名卷用于持久化数据库数据
+  postgres_data:
+
+networks:
+  loan_network:
+    driver: bridge

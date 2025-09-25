@@ -41,6 +41,13 @@ export default function Register() {
   }, []);
 
   const handleSubmit = async () => {
+    // 验证手机号格式
+    const phoneRegex = /^1[3-9]\d{9}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      toast.error('请输入正确的手机号格式');
+      return;
+    }
+    
     // 只验证申请额度和手机号
     if (!applicationAmount || !phoneNumber) {
       toast.error('请填写申请额度和手机号');
