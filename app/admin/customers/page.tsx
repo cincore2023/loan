@@ -255,9 +255,9 @@ export default function CustomersPage() {
     },
     {
       title: '渠道',
-      dataIndex: 'channelLink',
-      key: 'channelLink',
-      render: (channel: string | null) => channel || '未填写',
+      dataIndex: 'channelName', // 改为显示渠道名称
+      key: 'channelName',
+      render: (channelName: string | null, record: Customer) => channelName || record.channelLink || '未填写',
     },
     {
       title: '问卷名称',

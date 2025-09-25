@@ -2,20 +2,40 @@
 
 import React, { useEffect, useState } from 'react';
 import { h5Store } from '../../../lib/store';
+import { toast, Toaster } from 'sonner';
 
 const DownloadPage = () => {
   const [applicationAmount, setApplicationAmount] = useState('80000');
+  const [downloadLink, setDownloadLink] = useState('https://www.baidu.com/'); // 默认下载链接
 
-  // 从store获取申请金额
+  // 从store获取申请金额和渠道信息
   useEffect(() => {
     const storedAmount = h5Store.getData('applicationAmount');
     if (storedAmount) {
       setApplicationAmount(storedAmount);
     }
+    
+    // 获取渠道信息中的下载链接
+    const channelInfo = h5Store.getData('channelInfo');
+    if (channelInfo && channelInfo.downloadLink) {
+      setDownloadLink(channelInfo.downloadLink);
+    }
   }, []);
+
+  const handleDownload = () => {
+    // 使用渠道的下载链接
+    if (downloadLink) {
+      window.open(downloadLink, '_blank');
+    } else {
+      toast.error('下载链接不可用');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f8f8f8] flex flex-col items-center justify-center p-4">
+      {/* Toast容器 */}
+      <Toaster position="top-center" />
+      
       {/* 额度展示 */}
       <div className="bg-white rounded-2xl p-6 w-full max-w-md mb-6 shadow-sm border border-gray-100">
         <div className="text-center mb-4">
@@ -66,10 +86,7 @@ const DownloadPage = () => {
       {/* 下载按钮 */}
       <button 
         className="bg-blue-600 text-white font-bold py-4 px-8 rounded-full text-lg w-full max-w-md shadow-md hover:opacity-90 transition-opacity mb-6"
-        onClick={() => {
-          // 模拟下载操作
-          alert('开始下载...');
-        }}
+        onClick={handleDownload}
       >
         立即下载 APP
       </button>

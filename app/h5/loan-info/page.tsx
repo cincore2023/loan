@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { h5Store } from '@/lib/store';
 import PersonalInfoForm from './PersonalInfoForm';
+import { toast, Toaster } from 'sonner';
 
 export default function LoanInfo() {
   const router = useRouter();
@@ -84,7 +85,8 @@ export default function LoanInfo() {
     }
     
     try {
-      setLoading(true);
+      // 显示提交中的toast
+      const toastId = toast.loading('资料提交中...');
       
       // 准备用户选择的答案数据
       const selectedQuestions = questionnaire.questions.map((q: any) => {
@@ -124,18 +126,27 @@ export default function LoanInfo() {
       const result = await response.json();
       
       if (response.ok) {
+        // 更新toast为成功状态
+        toast.success('资料提交成功', { id: toastId });
+        
         // 提交成功，清除store中的临时数据
         h5Store.clearData('customerId');
         h5Store.clearData('channelInfo');
         h5Store.clearData('questionnaire');
+        h5Store.clearData('channelId');
         
-        // 跳转到首页
-        router.push('/h5/superLoan');
+        // 延迟跳转，让用户看到成功消息
+        setTimeout(() => {
+          router.push('/h5/superLoan');
+        }, 1500);
       } else {
+        // 更新toast为错误状态
+        toast.error(result.error || '提交失败', { id: toastId });
         throw new Error(result.error || '提交失败');
       }
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error('Failed to submit personal info:', err);
+      toast.error('提交失败，请稍后再试');
     }
   };
 
@@ -184,6 +195,9 @@ export default function LoanInfo() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      {/* Toast容器 */}
+      <Toaster position="top-center" />
+      
       {/* 顶部进度条和信息 */}
       <div className="p-4">
         <div className="w-full bg-gray-200 rounded-full h-2.5">

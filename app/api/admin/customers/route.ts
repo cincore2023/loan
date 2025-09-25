@@ -55,10 +55,12 @@ export async function GET(request: Request) {
         createdAt: customers.createdAt,
         updatedAt: customers.updatedAt,
         selectedQuestions: customers.selectedQuestions,
-        questionnaireName: questionnaires.questionnaireName
+        questionnaireName: questionnaires.questionnaireName,
+        channelName: channels.channelName // 添加渠道名称
       })
       .from(customers)
-      .leftJoin(questionnaires, eq(customers.questionnaireId, questionnaires.id));
+      .leftJoin(questionnaires, eq(customers.questionnaireId, questionnaires.id))
+      .leftJoin(channels, eq(customers.channelLink, channels.shortLink)); // 连接渠道表
     
     // 构建所有条件
     const whereConditions = [];
@@ -159,11 +161,13 @@ export async function POST(request: NextRequest) {
           createdAt: customers.createdAt,
           updatedAt: customers.updatedAt,
           selectedQuestions: customers.selectedQuestions,
-          questionnaireName: questionnaires.questionnaireName
+          questionnaireName: questionnaires.questionnaireName,
+          channelName: channels.channelName // 添加渠道名称
         })
         .from(customers)
-        .leftJoin(questionnaires, eq(customers.questionnaireId, questionnaires.id));
-      
+        .leftJoin(questionnaires, eq(customers.questionnaireId, questionnaires.id))
+        .leftJoin(channels, eq(customers.channelLink, channels.shortLink)); // 连接渠道表
+
       // 构建所有条件
       const whereConditions = [];
       

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast, Toaster } from 'sonner';
 import { provinces, cities } from '@/lib/china-division';
 import { h5Store } from '../../../lib/store';
 
@@ -64,8 +64,11 @@ export default function PersonalInfoForm({ customerId, onSubmit, onCancel }: Per
       return;
     }
 
+    // 显示提交中的toast
+    const toastId = toast.loading('资料提交中...');
+    setLoading(true);
+    
     try {
-      setLoading(true);
       await onSubmit({
         name,
         idCard,
@@ -73,11 +76,14 @@ export default function PersonalInfoForm({ customerId, onSubmit, onCancel }: Per
         city,
         district,
       });
+      
+      // 更新toast为成功状态
+      toast.success('资料提交成功', { id: toastId });
       // 标记为已提交
       setIsSubmitted(true);
     } catch (err) {
       console.error('Failed to submit personal info:', err);
-      toast.error('提交失败，请稍后再试');
+      toast.error('提交失败，请稍后再试', { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -94,6 +100,9 @@ export default function PersonalInfoForm({ customerId, onSubmit, onCancel }: Per
 
   return (
     <div className="fixed inset-0 bg-white z-50 flex flex-col">
+      {/* Toast容器 */}
+      <Toaster position="top-center" />
+      
       {/* 顶部进度条和信息 */}
       <div className="p-4">
         <div className="w-full bg-gray-200 rounded-full h-2.5">

@@ -40,7 +40,8 @@ const SuperLoanPage = () => {
                 <header
                     className="relative h-[307px] pt-[92px] px-8 bg-no-repeat bg-cover rounded-lg"
                     style={{
-                        backgroundColor: '#325ef3',
+                        backgroundSize: '100%',
+                        backgroundImage: 'url(/images/background.png)'
                     }}
                 >
                     {/* backgroundImage: 'url(/images/background.png)',
