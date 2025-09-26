@@ -19,6 +19,7 @@
     "docker:set-env": "source scripts/set-docker-mirror-env.sh",
     "docker:config-server": "sudo sh scripts/configure-server-docker-mirror.sh",
     "docker:test-env": "sh scripts/test-docker-environment.sh",
+    "docker:prepare-context": "sh scripts/prepare-build-context.sh",
     "server:deploy": "sh scripts/server-deploy.sh",
     "server:deploy:custom": "sh scripts/server-deploy.sh --base-image docker.xuanyuan.me/library/node:18-alpine"
   },

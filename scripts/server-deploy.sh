@@ -137,6 +137,10 @@ check_env_file() {
 build_image() {
   info "在服务器上构建Docker镜像..."
   
+  # 准备优化的构建上下文
+  info "准备构建上下文..."
+  ./scripts/prepare-build-context.sh
+  
   # 设置Docker镜像源加速
   local registry_mirror="https://docker.xuanyuan.me"
   
@@ -157,6 +161,12 @@ build_image() {
       --registry-mirror="$registry_mirror" \
       -t "loan-app:$TAG" \
       -f Dockerfile.prod .
+  fi
+  
+  # 清理构建上下文
+  if [ -d ".build-context" ]; then
+    rm -rf ".build-context"
+    info "已清理构建上下文"
   fi
   
   log "Docker镜像构建完成: loan-app:$TAG"

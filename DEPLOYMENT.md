@@ -213,3 +213,23 @@ docker-compose -f docker-compose.deploy.yml exec app pnpm run db:migrate
 docker-compose -f docker-compose.deploy.yml exec app pnpm run db:seed
 ```
 
+## 构建优化
+
+为了减少Docker构建过程中的上下文大小，部署脚本会自动执行以下优化措施：
+
+1. **清理临时文件**：自动清理构建缓存和临时文件
+2. **优化node_modules**：移除不必要的缓存文件
+3. **最小化构建上下文**：只打包必要的文件和目录
+
+### 手动优化构建上下文
+
+如果需要手动优化构建上下文，可以使用以下命令：
+
+```bash
+# 使用npm脚本
+npm run docker:prepare-context
+
+# 或者直接运行脚本
+./scripts/prepare-build-context.sh
+```
+
