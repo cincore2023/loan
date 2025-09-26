@@ -5,7 +5,8 @@
 1. [概述](#概述)
 2. [配置方法](#配置方法)
 3. [验证配置](#验证配置)
-4. [故障排除](#故障排除)
+4. [安装Docker Buildx](#安装Docker-Buildx)
+5. [故障排除](#故障排除)
 
 ## 概述
 
@@ -69,6 +70,35 @@ docker info | grep -i registry
 # 测试拉取镜像的速度
 time docker pull hello-world
 ```
+
+## 安装Docker Buildx
+
+Docker Buildx是Docker的下一代构建工具，提供更好的性能和功能。
+
+### 使用npm脚本安装
+
+```bash
+npm run docker:install-buildx
+```
+
+### 手动安装
+
+```bash
+# 运行我们提供的安装脚本
+./scripts/install-docker-buildx.sh
+```
+
+### 验证安装
+
+```bash
+# 检查Buildx版本
+docker buildx version
+
+# 检查构建器实例
+docker buildx ls
+```
+
+安装完成后，部署脚本会自动使用BuildKit功能来加速镜像构建。
 
 ## 故障排除
 

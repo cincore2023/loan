@@ -17,6 +17,7 @@
     "docker:config": "sudo sh scripts/configure-docker-mirror.sh",
     "docker:test": "sh scripts/test-docker-mirror.sh",
     "docker:set-env": "source scripts/set-docker-mirror-env.sh",
+    "docker:install-buildx": "sh scripts/install-docker-buildx.sh",
     "server:deploy": "sh scripts/server-deploy.sh"
   },
   "dependencies": {

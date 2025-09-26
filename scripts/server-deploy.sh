@@ -96,6 +96,19 @@ check_dependencies() {
   log "依赖检查通过"
 }
 
+# 检查Docker BuildKit支持
+check_buildkit_support() {
+  info "检查Docker BuildKit支持..."
+  
+  if docker buildx version &> /dev/null; then
+    log "Docker BuildKit可用"
+    return 0
+  else
+    warn "Docker BuildKit不可用，将使用传统构建方式"
+    return 1
+  fi
+}
+
 # 检查环境变量文件
 check_env_file() {
   if [ ! -f "$ENV_FILE" ]; then
@@ -114,12 +127,21 @@ build_image() {
   # 设置Docker镜像源加速
   local registry_mirror="${DOCKER_REGISTRY_MIRROR:-https://pw6rk6ai.mirror.aliyuncs.com}"
   
-  # 构建镜像
-  DOCKER_BUILDKIT=1 docker build \
-    --build-arg BUILDKIT_INLINE_CACHE=1 \
-    --registry-mirror="$registry_mirror" \
-    -t "loan-app:$TAG" \
-    -f Dockerfile.prod .
+  # 检查BuildKit支持
+  if check_buildkit_support; then
+    # 使用BuildKit构建
+    DOCKER_BUILDKIT=1 docker build \
+      --build-arg BUILDKIT_INLINE_CACHE=1 \
+      --registry-mirror="$registry_mirror" \
+      -t "loan-app:$TAG" \
+      -f Dockerfile.prod .
+  else
+    # 使用传统方式构建
+    docker build \
+      --registry-mirror="$registry_mirror" \
+      -t "loan-app:$TAG" \
+      -f Dockerfile.prod .
+  fi
   
   log "Docker镜像构建完成: loan-app:$TAG"
 }
