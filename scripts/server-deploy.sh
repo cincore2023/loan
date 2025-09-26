@@ -20,6 +20,10 @@ info() {
   echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
 }
 
+warn() {
+  echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] WARNING:${NC} $1"
+}
+
 error() {
   echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR:${NC} $1"
 }
@@ -104,7 +108,7 @@ check_buildkit_support() {
     log "Docker BuildKit可用"
     return 0
   else
-    warn "Docker BuildKit不可用，将使用传统构建方式"
+    info "Docker BuildKit不可用，将使用传统构建方式"
     return 1
   fi
 }
@@ -136,7 +140,7 @@ build_image() {
       -t "loan-app:$TAG" \
       -f Dockerfile.prod .
   else
-    # 使用传统方式构建
+    # 使用传统方式构建，不设置DOCKER_BUILDKIT环境变量
     docker build \
       --registry-mirror="$registry_mirror" \
       -t "loan-app:$TAG" \
