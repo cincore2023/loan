@@ -1,5 +1,5 @@
-# 使用阿里云的Node.js基础镜像
-ARG BASE_IMAGE=registry.cn-hangzhou.aliyuncs.com/aliyun-node/alinode:18-alpine
+# 使用官方Node.js基础镜像（通过镜像加速拉取）
+ARG BASE_IMAGE=node:18-alpine
 FROM ${BASE_IMAGE}
 
 # 启用 corepack 以使用 pnpm

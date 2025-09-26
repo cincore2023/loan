@@ -3,14 +3,12 @@
 ## 目录结构
 ```
 loan/
-├── docker-compose.prod.yml    # 生产环境 Docker Compose 配置
 ├── Dockerfile.prod           # 生产环境 Dockerfile
 ├── .env.example             # 环境变量示例文件
 ├── scripts/
 │   ├── server-deploy.sh      # 服务器本地打包部署脚本
 │   ├── db-backup.sh          # 数据库备份恢复脚本
 │   ├── quick-start.sh        # 快速启动脚本
-│   ├── configure-docker-mirror.sh  # Docker镜像源配置脚本
 │   ├── set-docker-mirror-env.sh    # 环境变量配置脚本
 │   └── test-docker-mirror.sh       # 镜像源测试脚本
 └── ...
@@ -72,8 +70,6 @@ chmod +x scripts/*.sh
 - 简化部署流程
 - 支持自定义基础镜像
 
-详细说明请参考 [SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md) 文档。
-
 ## 自定义基础镜像
 
 在构建Docker镜像时，您可以指定自定义的基础镜像以提高构建速度或满足特定需求。
@@ -106,25 +102,25 @@ chmod +x scripts/*.sh
 
 ### 查看服务状态
 ```bash
-docker-compose -f docker-compose.prod.yml ps
+docker-compose -f docker-compose.deploy.yml ps
 ```
 
 ### 查看日志
 ```bash
 # 查看应用日志
-docker-compose -f docker-compose.prod.yml logs app
+docker-compose -f docker-compose.deploy.yml logs app
 
 # 查看数据库日志
-docker-compose -f docker-compose.prod.yml logs postgres
+docker-compose -f docker-compose.deploy.yml logs postgres
 ```
 
 ### 重启服务
 ```bash
 # 重启所有服务
-docker-compose -f docker-compose.prod.yml restart
+docker-compose -f docker-compose.deploy.yml restart
 
 # 重启特定服务
-docker-compose -f docker-compose.prod.yml restart app
+docker-compose -f docker-compose.deploy.yml restart app
 ```
 
 ### 更新应用

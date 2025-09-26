@@ -19,7 +19,7 @@ Dockerfile中已添加了BASE_IMAGE构建参数，允许在构建时指定基础
 
 ```dockerfile
 # 允许通过构建参数指定基础镜像
-ARG BASE_IMAGE=registry.cn-hangzhou.aliyuncs.com/your-namespace/node:18-alpine
+ARG BASE_IMAGE=node:18-alpine
 FROM ${BASE_IMAGE}
 ```
 
@@ -35,19 +35,26 @@ npm run server:deploy -- --base-image registry.cn-hangzhou.aliyuncs.com/your-nam
 
 ## 配置自定义基础镜像
 
-### 1. 使用阿里云镜像
-
-阿里云提供了Node.js的加速镜像：
+### 1. 使用官方Node.js镜像（推荐配合镜像加速使用）
 
 ```bash
-# 使用阿里云Node.js镜像（默认）
+# 使用官方Node.js镜像（默认，通过镜像加速拉取）
 ./scripts/server-deploy.sh
 
 # 或者显式指定
-./scripts/server-deploy.sh --base-image registry.cn-hangzhou.aliyuncs.com/aliyun-node/alinode:18-alpine
+./scripts/server-deploy.sh --base-image node:18-alpine
 ```
 
-### 2. 使用您自己的私有镜像
+### 2. 使用阿里云镜像
+
+如果您更喜欢使用阿里云的Node.js镜像：
+
+```bash
+# 使用阿里云Node.js镜像
+./scripts/server-deploy.sh --base-image registry.cn-hangzhou.aliyuncs.com/aliyun-node/node:18-alpine
+```
+
+### 3. 使用您自己的私有镜像
 
 如果您有自己的私有镜像仓库：
 
@@ -55,7 +62,7 @@ npm run server:deploy -- --base-image registry.cn-hangzhou.aliyuncs.com/your-nam
 ./scripts/server-deploy.sh --base-image registry.your-company.com/node:18-alpine
 ```
 
-### 3. 使用本地缓存的镜像
+### 4. 使用本地缓存的镜像
 
 如果您已经拉取了基础镜像到本地：
 
@@ -78,7 +85,7 @@ npm run server:deploy -- --base-image registry.cn-hangzhou.aliyuncs.com/your-nam
 
 ```bash
 # 预先拉取阿里云Node.js镜像
-docker pull registry.cn-hangzhou.aliyuncs.com/aliyun-node/alinode:18-alpine
+docker pull registry.cn-hangzhou.aliyuncs.com/aliyun-node/node:18-alpine
 ```
 
 ### 3. 镜像验证
@@ -90,3 +97,7 @@ docker pull registry.cn-hangzhou.aliyuncs.com/aliyun-node/alinode:18-alpine
 
 1. 准备多个基础镜像选项以防某个镜像不可用
 2. 在脚本中添加基础镜像可用性检查
+
+## 镜像加速
+
+本项目已配置使用阿里云镜像加速地址 `https://pw6rk6ai.mirror.aliyuncs.com` 来加速基础镜像的拉取过程。

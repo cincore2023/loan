@@ -37,7 +37,7 @@ show_help() {
   echo "选项:"
   echo "  --env-file <file>   环境变量文件路径 (默认: .env)"
   echo "  --tag <tag>         镜像标签 (默认: latest)"
-  echo "  --base-image <image> 基础镜像地址 (默认: registry.cn-hangzhou.aliyuncs.com/your-namespace/node:18-alpine)"
+  echo "  --base-image <image> 基础镜像地址 (默认: node:18-alpine)"
   echo "  --no-migrate        跳过数据库迁移"
   echo "  --no-seed           跳过数据种子"
   echo "  --help              显示帮助信息"
@@ -45,13 +45,13 @@ show_help() {
   echo "示例:"
   echo "  $0"
   echo "  $0 --tag v1.0.0"
-  echo "  $0 --base-image registry.cn-hangzhou.aliyuncs.com/your-namespace/node:18-alpine"
+  echo "  $0 --base-image node:18-alpine"
 }
 
 # 默认值
 ENV_FILE=".env"
 TAG="latest"
-BASE_IMAGE="registry.cn-hangzhou.aliyuncs.com/aliyun-node/alinode:18-alpine"
+BASE_IMAGE="node:18-alpine"
 RUN_MIGRATE=true
 RUN_SEED=true
 
@@ -136,11 +136,11 @@ build_image() {
   info "在服务器上构建Docker镜像..."
   
   # 设置Docker镜像源加速
-  local registry_mirror="${DOCKER_REGISTRY_MIRROR:-https://pw6rk6ai.mirror.aliyuncs.com}"
+  local registry_mirror="https://pw6rk6ai.mirror.aliyuncs.com"
   
   # 检查BuildKit支持
   if check_buildkit_support; then
-    # 使用BuildKit构建，支持自定义基础镜像
+    # 使用BuildKit构建，支持自定义基础镜像和镜像加速
     DOCKER_BUILDKIT=1 docker build \
       --build-arg BUILDKIT_INLINE_CACHE=1 \
       --build-arg BASE_IMAGE="$BASE_IMAGE" \
