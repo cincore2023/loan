@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import {
@@ -18,13 +18,33 @@ import {
   Typography,
   theme
 } from 'antd';
+import { isClientAuthenticated } from '@/libs/auth/auth-client';
 
 const { Title, Text } = Typography;
 
 export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const router = useRouter();
   const { token } = theme.useToken();
+
+  // 检查用户是否已经登录
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const auth = isClientAuthenticated();
+        if (auth) {
+          router.push('/admin/customers');
+        }
+      } catch (error) {
+        console.error('检查认证状态失败:', error);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   const handleSubmit = async (values: { username: string; password: string; remember: boolean }) => {
     setLoading(true);
@@ -58,6 +78,14 @@ export default function AdminLogin() {
       setLoading(false);
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div>正在检查登录状态...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

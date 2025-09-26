@@ -51,7 +51,7 @@ show_help() {
 # 默认值
 ENV_FILE=".env"
 TAG="latest"
-BASE_IMAGE="docker.xuanyuan.me/library/node:18-alpine"
+BASE_IMAGE="node:18-alpine"
 RUN_MIGRATE=true
 RUN_SEED=true
 
@@ -141,17 +141,13 @@ build_image() {
   info "准备构建上下文..."
   ./scripts/prepare-build-context.sh
   
-  # 设置Docker镜像源加速
-  local registry_mirror="https://docker.xuanyuan.me"
-  
   # 检查BuildKit支持
   if check_buildkit_support; then
-    # 使用BuildKit构建，支持自定义基础镜像和镜像加速
-    info "使用BuildKit构建方式（使用镜像加速）"
+    # 使用BuildKit构建，支持自定义基础镜像
+    info "使用BuildKit构建方式"
     DOCKER_BUILDKIT=1 docker build \
       --build-arg BUILDKIT_INLINE_CACHE=1 \
       --build-arg BASE_IMAGE="$BASE_IMAGE" \
-      --registry-mirror="$registry_mirror" \
       -t "loan-app:$TAG" \
       -f Dockerfile.prod .
   else
@@ -188,6 +184,12 @@ stop_services() {
     log "服务已停止"
   else
     info "服务未运行"
+  fi
+  
+  # 强制释放3000端口
+  if lsof -i :3000 &> /dev/null; then
+    info "释放被占用的3000端口..."
+    lsof -ti :3000 | xargs kill -9 2>/dev/null || true
   fi
 }
 
@@ -280,3 +282,5 @@ main() {
 
 # 执行主函数
 main "$@"
+
+

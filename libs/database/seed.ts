@@ -4,6 +4,7 @@ import { admins, questionnaires, channels } from './schema';
 import { hashPassword } from '@/libs/auth/password';
 import { sql } from 'drizzle-orm';
 
+// 从环境变量获取数据库连接字符串
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/loan_db';
 const client = postgres(connectionString);
 const db = drizzle(client);

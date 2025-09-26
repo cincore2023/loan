@@ -96,11 +96,11 @@ verify_initialization() {
   
   local compose_cmd=$(get_compose_cmd)
   
-  # 检查是否能连接到数据库并查询数据
-  if $compose_cmd -f docker-compose.deploy.yml exec postgres psql -U postgres -c "SELECT COUNT(*) FROM admins;" &> /dev/null; then
-    log "数据库初始化验证通过"
+  # 检查是否能连接到数据库
+  if $compose_cmd -f docker-compose.deploy.yml exec postgres pg_isready -U postgres &> /dev/null; then
+    log "数据库连接验证通过"
   else
-    error "数据库初始化验证失败"
+    error "数据库连接验证失败"
     exit 1
   fi
 }

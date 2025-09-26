@@ -2,10 +2,13 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 
-// JWT 密钥 - 在实际应用中应该从环境变量中获取
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-super-secret-jwt-secret-key-for-development-only'
-);
+// JWT 密钥 - 确保获取方式一致
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET || 'your-super-secret-jwt-secret-key-for-development-only';
+  return new TextEncoder().encode(secret);
+}
+
+const JWT_SECRET = getJwtSecret();
 
 // Token 过期时间 (1小时)
 const TOKEN_EXPIRATION = 60 * 60;
@@ -45,7 +48,7 @@ export async function setAuthCookie(token: string) {
     secure: process.env.NODE_ENV === 'production',
     maxAge: TOKEN_EXPIRATION,
     path: '/',
-    sameSite: 'strict',
+    sameSite: 'lax', // 改为 lax 以提高兼容性
   });
 }
 

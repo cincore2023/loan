@@ -1,5 +1,5 @@
 # 使用官方Node.js基础镜像（通过 docker.xuanyuan.me 镜像加速拉取）
-ARG BASE_IMAGE=docker.xuanyuan.me/library/node:18-alpine
+ARG BASE_IMAGE=node:18-alpine
 FROM ${BASE_IMAGE}
 
 # 启用 corepack 以使用 pnpm
