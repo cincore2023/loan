@@ -28,7 +28,7 @@ export DOCKER_BUILDKIT=1
 
 # 部署应用
 echo "📦 部署应用..."
-./scripts/deploy.sh --build --migrate --seed
+./scripts/server-deploy.sh
 
 echo "✅ 部署完成!"
 echo "应用查看: http://localhost:3000"
