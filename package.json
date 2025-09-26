@@ -19,7 +19,8 @@
     "docker:set-env": "source scripts/set-docker-mirror-env.sh",
     "docker:install-buildx": "sh scripts/install-docker-buildx.sh",
     "docker:install-jq": "sh scripts/install-jq.sh",
-    "server:deploy": "sh scripts/server-deploy.sh"
+    "server:deploy": "sh scripts/server-deploy.sh",
+    "server:deploy:custom": "sh scripts/server-deploy.sh --base-image registry.cn-hangzhou.aliyuncs.com/aliyun-node/alinode:18-alpine"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.2",

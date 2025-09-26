@@ -70,8 +70,15 @@ chmod +x scripts/*.sh
 - 服务器本地构建镜像
 - 数据库数据持久化存储
 - 简化部署流程
+- 支持自定义基础镜像
 
 详细说明请参考 [SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md) 文档。
+
+## 自定义基础镜像
+
+在构建Docker镜像时，您可以指定自定义的基础镜像以提高构建速度或满足特定需求。
+
+详细说明请参考 [CUSTOM_BASE_IMAGE.md](CUSTOM_BASE_IMAGE.md) 文档。
 
 ## 数据库备份与恢复
 

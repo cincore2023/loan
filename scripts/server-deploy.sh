@@ -37,6 +37,7 @@ show_help() {
   echo "选项:"
   echo "  --env-file <file>   环境变量文件路径 (默认: .env)"
   echo "  --tag <tag>         镜像标签 (默认: latest)"
+  echo "  --base-image <image> 基础镜像地址 (默认: registry.cn-hangzhou.aliyuncs.com/your-namespace/node:18-alpine)"
   echo "  --no-migrate        跳过数据库迁移"
   echo "  --no-seed           跳过数据种子"
   echo "  --help              显示帮助信息"
@@ -44,11 +45,13 @@ show_help() {
   echo "示例:"
   echo "  $0"
   echo "  $0 --tag v1.0.0"
+  echo "  $0 --base-image registry.cn-hangzhou.aliyuncs.com/your-namespace/node:18-alpine"
 }
 
 # 默认值
 ENV_FILE=".env"
 TAG="latest"
+BASE_IMAGE="registry.cn-hangzhou.aliyuncs.com/aliyun-node/alinode:18-alpine"
 RUN_MIGRATE=true
 RUN_SEED=true
 
@@ -61,6 +64,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --tag)
       TAG="$2"
+      shift 2
+      ;;
+    --base-image)
+      BASE_IMAGE="$2"
       shift 2
       ;;
     --no-migrate)
@@ -133,16 +140,18 @@ build_image() {
   
   # 检查BuildKit支持
   if check_buildkit_support; then
-    # 使用BuildKit构建
+    # 使用BuildKit构建，支持自定义基础镜像
     DOCKER_BUILDKIT=1 docker build \
       --build-arg BUILDKIT_INLINE_CACHE=1 \
+      --build-arg BASE_IMAGE="$BASE_IMAGE" \
       --registry-mirror="$registry_mirror" \
       -t "loan-app:$TAG" \
       -f Dockerfile.prod .
   else
-    # 使用传统方式构建，不使用--registry-mirror参数
+    # 使用传统方式构建，支持自定义基础镜像
     info "使用传统Docker构建方式（无镜像加速）"
     docker build \
+      --build-arg BASE_IMAGE="$BASE_IMAGE" \
       -t "loan-app:$TAG" \
       -f Dockerfile.prod .
   fi
