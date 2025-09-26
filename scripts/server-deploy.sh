@@ -140,9 +140,9 @@ build_image() {
       -t "loan-app:$TAG" \
       -f Dockerfile.prod .
   else
-    # 使用传统方式构建，不设置DOCKER_BUILDKIT环境变量
+    # 使用传统方式构建，不使用--registry-mirror参数
+    info "使用传统Docker构建方式（无镜像加速）"
     docker build \
-      --registry-mirror="$registry_mirror" \
       -t "loan-app:$TAG" \
       -f Dockerfile.prod .
   fi

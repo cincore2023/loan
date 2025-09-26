@@ -49,14 +49,37 @@ configure_docker_daemon() {
   if [ -f "$daemon_config" ]; then
     info "备份现有配置文件..."
     cp "$daemon_config" "${daemon_config}.backup.$(date +%Y%m%d_%H%M%S)"
-  fi
-  
-  # 写入新的配置
-  cat > "$daemon_config" << EOF
+    
+    # 尝试解析现有的JSON配置
+    if command -v jq &> /dev/null; then
+      # 使用jq来合并配置
+      info "使用jq合并现有配置..."
+      # 创建新的配置（包含镜像源）
+      echo '{"registry-mirrors": ["https://pw6rk6ai.mirror.aliyuncs.com"]}' > /tmp/docker-config-new.json
+      
+      # 合并现有配置和新配置
+      jq -s '.[0] * .[1]' "$daemon_config" /tmp/docker-config-new.json > /tmp/docker-config-merged.json
+      
+      # 移动合并后的配置
+      mv /tmp/docker-config-merged.json "$daemon_config"
+      rm /tmp/docker-config-new.json
+    else
+      # 如果没有jq，直接备份并创建新配置
+      warn "未找到jq工具，将覆盖现有配置"
+      cat > "$daemon_config" << EOF
 {
   "registry-mirrors": ["https://pw6rk6ai.mirror.aliyuncs.com"]
 }
 EOF
+    fi
+  else
+    # 创建新的配置
+    cat > "$daemon_config" << EOF
+{
+  "registry-mirrors": ["https://pw6rk6ai.mirror.aliyuncs.com"]
+}
+EOF
+  fi
   
   log "Docker daemon配置完成"
 }

@@ -18,6 +18,7 @@
     "docker:test": "sh scripts/test-docker-mirror.sh",
     "docker:set-env": "source scripts/set-docker-mirror-env.sh",
     "docker:install-buildx": "sh scripts/install-docker-buildx.sh",
+    "docker:install-jq": "sh scripts/install-jq.sh",
     "server:deploy": "sh scripts/server-deploy.sh"
   },
   "dependencies": {
