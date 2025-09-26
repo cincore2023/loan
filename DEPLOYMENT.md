@@ -9,6 +9,8 @@ loan/
 │   ├── server-deploy.sh      # 服务器本地打包部署脚本
 │   ├── db-backup.sh          # 数据库备份恢复脚本
 │   ├── quick-start.sh        # 快速启动脚本
+│   ├── configure-server-docker-mirror.sh  # 服务器Docker镜像源配置脚本
+│   ├── test-docker-environment.sh     # Docker环境兼容性测试脚本
 │   ├── set-docker-mirror-env.sh    # 环境变量配置脚本
 │   └── test-docker-mirror.sh       # 镜像源测试脚本
 └── ...
@@ -44,9 +46,27 @@ chmod +x scripts/*.sh
 
 ## Docker镜像源配置
 
-为了提高Docker镜像构建和拉取速度，建议配置阿里云镜像加速。
+为了提高Docker镜像构建和拉取速度，建议配置镜像加速。
 
 详细配置说明请参考 [DOCKER_MIRROR.md](DOCKER_MIRROR.md) 文档。
+
+## 环境兼容性测试
+
+在部署之前，建议先测试服务器环境的兼容性：
+
+```bash
+# 使用npm脚本测试
+npm run docker:test-env
+
+# 或者直接运行脚本
+./scripts/test-docker-environment.sh
+```
+
+该脚本会检查：
+1. Docker 版本兼容性
+2. Docker Compose 可用性
+3. BuildKit 支持
+4. 镜像加速地址可用性
 
 ## 快速启动脚本
 

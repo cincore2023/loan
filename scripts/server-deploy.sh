@@ -99,7 +99,8 @@ check_dependencies() {
     exit 1
   fi
   
-  if ! command -v docker-compose &> /dev/null; then
+  # 检查 docker-compose 或 docker compose
+  if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
     error "未找到 docker-compose。请先安装 docker-compose。"
     exit 1
   fi
@@ -111,7 +112,8 @@ check_dependencies() {
 check_buildkit_support() {
   info "检查Docker BuildKit支持..."
   
-  if docker buildx version &> /dev/null; then
+  # 检查多种方式来确定BuildKit是否可用
+  if docker buildx version &> /dev/null || docker build --help | grep -q buildkit; then
     log "Docker BuildKit可用"
     return 0
   else
@@ -163,9 +165,15 @@ build_image() {
 stop_services() {
   info "停止当前服务..."
   
+  # 确定使用哪个docker-compose命令
+  local compose_cmd="docker-compose"
+  if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
+    compose_cmd="docker compose"
+  fi
+  
   # 检查服务是否正在运行
-  if docker-compose -f docker-compose.deploy.yml ps | grep -q "Up"; then
-    docker-compose -f docker-compose.deploy.yml down
+  if $compose_cmd -f docker-compose.deploy.yml ps | grep -q "Up"; then
+    $compose_cmd -f docker-compose.deploy.yml down
     log "服务已停止"
   else
     info "服务未运行"
@@ -176,8 +184,14 @@ stop_services() {
 start_services() {
   info "启动服务..."
   
+  # 确定使用哪个docker-compose命令
+  local compose_cmd="docker-compose"
+  if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
+    compose_cmd="docker compose"
+  fi
+  
   # 使用环境变量文件和部署配置文件启动服务
-  docker-compose -f docker-compose.deploy.yml --env-file "$ENV_FILE" up -d
+  $compose_cmd -f docker-compose.deploy.yml --env-file "$ENV_FILE" up -d
   
   log "服务启动完成"
 }
@@ -186,16 +200,22 @@ start_services() {
 wait_for_services() {
   info "等待服务启动..."
   
+  # 确定使用哪个docker-compose命令
+  local compose_cmd="docker-compose"
+  if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
+    compose_cmd="docker compose"
+  fi
+  
   # 等待一段时间让服务启动
   sleep 10
   
   # 检查服务状态
-  if docker-compose -f docker-compose.deploy.yml ps | grep -q "Up"; then
+  if $compose_cmd -f docker-compose.deploy.yml ps | grep -q "Up"; then
     log "服务运行正常"
   else
     error "服务启动失败"
     echo "查看日志以获取更多信息:"
-    echo "  docker-compose -f docker-compose.deploy.yml logs"
+    echo "  $compose_cmd -f docker-compose.deploy.yml logs"
     exit 1
   fi
 }
@@ -205,11 +225,17 @@ run_migrations() {
   if [ "$RUN_MIGRATE" = true ]; then
     info "运行数据库迁移..."
     
+    # 确定使用哪个docker-compose命令
+    local compose_cmd="docker-compose"
+    if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
+      compose_cmd="docker compose"
+    fi
+    
     # 等待数据库启动
     sleep 10
     
     # 运行迁移
-    docker-compose -f docker-compose.deploy.yml exec app pnpm run db:migrate
+    $compose_cmd -f docker-compose.deploy.yml exec app pnpm run db:migrate
     log "数据库迁移完成"
   else
     info "跳过数据库迁移"
@@ -220,7 +246,14 @@ run_migrations() {
 run_seeds() {
   if [ "$RUN_SEED" = true ]; then
     info "运行数据种子..."
-    docker-compose -f docker-compose.deploy.yml exec app pnpm run db:seed
+    
+    # 确定使用哪个docker-compose命令
+    local compose_cmd="docker-compose"
+    if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
+      compose_cmd="docker compose"
+    fi
+    
+    $compose_cmd -f docker-compose.deploy.yml exec app pnpm run db:seed
     log "数据种子运行完成"
   else
     info "跳过数据种子"
@@ -230,7 +263,14 @@ run_seeds() {
 # 显示服务状态
 show_status() {
   info "服务状态:"
-  docker-compose -f docker-compose.deploy.yml ps
+  
+  # 确定使用哪个docker-compose命令
+  local compose_cmd="docker-compose"
+  if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
+    compose_cmd="docker compose"
+  fi
+  
+  $compose_cmd -f docker-compose.deploy.yml ps
 }
 
 # 主函数

@@ -16,6 +16,8 @@
     "db:restore": "sh scripts/db-backup.sh restore",
     "docker:test": "sh scripts/test-docker-mirror.sh",
     "docker:set-env": "source scripts/set-docker-mirror-env.sh",
+    "docker:config-server": "sudo sh scripts/configure-server-docker-mirror.sh",
+    "docker:test-env": "sh scripts/test-docker-environment.sh",
     "server:deploy": "sh scripts/server-deploy.sh",
     "server:deploy:custom": "sh scripts/server-deploy.sh --base-image node:18-alpine"
   },

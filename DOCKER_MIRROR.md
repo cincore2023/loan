@@ -5,9 +5,7 @@
 1. [概述](#概述)
 2. [配置方法](#配置方法)
 3. [验证配置](#验证配置)
-4. [安装Docker Buildx](#安装Docker-Buildx)
-5. [安装jq工具](#安装jq工具)
-6. [故障排除](#故障排除)
+4. [相关脚本](#相关脚本)
 
 ## 概述
 
@@ -15,6 +13,19 @@
 
 ## 配置方法
 
+### 方法1: 系统级配置（推荐）
+
+适用于有root权限的服务器环境:
+
+```bash
+# 运行配置脚本
+sudo ./scripts/configure-server-docker-mirror.sh
+```
+
+此方法会:
+- 修改 `/etc/docker/daemon.json` 配置文件
+- 重启Docker服务
+- 永久生效
 
 ### 方法2: 环境变量配置
 
@@ -59,9 +70,8 @@ docker info | grep -i registry
 time docker pull hello-world
 ```
 
-
-
 ## 相关脚本
 
+- `scripts/configure-server-docker-mirror.sh` - 服务器系统级配置脚本
 - `scripts/set-docker-mirror-env.sh` - 环境变量配置脚本
 - `scripts/test-docker-mirror.sh` - 配置验证脚本
