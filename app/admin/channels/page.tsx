@@ -37,6 +37,7 @@ import AntdSidebar from '@/components/admin/antd-sidebar';
 import QuestionnaireViewModal from '@/components/admin/questionnaire-view-modal';
 import ChannelQuestionnaireViewModal from '@/components/admin/channel-questionnaire-view-modal';
 import { exportChannelsToExcel } from '@/lib/export-utils';
+import { authFetch } from '@/libs/auth/auth-client';
 
 const { Header, Content, Footer } = Layout;
 const { RangePicker } = DatePicker;
@@ -112,7 +113,9 @@ export default function ChannelsPage() {
   // 获取问卷列表
   const fetchQuestionnaires = async () => {
     try {
-      const response = await fetch('/api/admin/questionnaires');
+      setLoading(true);
+      // 使用 authFetch 替代 fetch
+      const response = await authFetch('/api/admin/questionnaires');
       const data = await response.json();
 
       if (response.ok) {
@@ -123,13 +126,14 @@ export default function ChannelsPage() {
     } catch (error) {
       console.error('Failed to fetch questionnaires:', error);
       message.error('获取问卷列表失败');
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchChannels = async (searchKeywordLocal?: string) => {
     try {
       setLoading(true);
-      // 构建查询参数
       let url = '/api/admin/channels';
       const params = new URLSearchParams();
 
@@ -150,7 +154,8 @@ export default function ChannelsPage() {
         url += `?${params.toString()}`;
       }
 
-      const response = await fetch(url);
+      // 使用 authFetch 替代 fetch
+      const response = await authFetch(url);
       const data = await response.json();
 
       if (response.ok) {
@@ -185,10 +190,15 @@ export default function ChannelsPage() {
     setIsModalVisible(true);
   };
 
-  const handleDeleteChannel = async (id: string) => {
+  const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/admin/channels?id=${id}`, {
+      // 使用 authFetch 替代 fetch
+      const response = await authFetch('/api/admin/channels', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
       });
 
       const data = await response.json();
@@ -210,7 +220,8 @@ export default function ChannelsPage() {
       const channel = channels.find(c => c.id === id);
       if (!channel) return;
 
-      const response = await fetch('/api/admin/channels', {
+      // 使用 authFetch 替代 fetch
+      const response = await authFetch('/api/admin/channels', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -269,39 +280,18 @@ export default function ChannelsPage() {
     }, 0);
   };
 
-  const handleModalOk = async () => {
+  const handleSubmit = async (values: any) => {
     try {
-      const values = await form.validateFields();
-
-      // 处理标签字段，兼容中英文逗号
-      let tags = [];
-      if (values.tags) {
-        // 使用正则表达式分割中英文逗号
-        tags = values.tags.split(/[,\，]/)
-          .map((tag: string) => tag.trim())
-          .filter(Boolean);
-      }
-
+      setLoading(true);
       if (editingChannel) {
-        // 更新渠道
-        const response = await fetch('/api/admin/channels', {
+        // 编辑渠道
+        // 使用 authFetch 替代 fetch
+        const response = await authFetch('/api/admin/channels', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            id: editingChannel.id,
-            channelName: values.channelName,
-            questionnaireId: values.questionnaireId,
-            uvCount: editingChannel.uvCount,
-            questionnaireSubmitCount: editingChannel.questionnaireSubmitCount,
-            remark: values.remark,
-            shortLink: values.shortLink, // 用户自定义的短链接
-            downloadLink: values.downloadLink,
-            isDefault: values.isDefault,
-            tags,
-            isActive: values.isActive
-          }),
+          body: JSON.stringify({ ...values, id: editingChannel.id }),
         });
 
         const data = await response.json();
@@ -313,19 +303,14 @@ export default function ChannelsPage() {
           message.error(data.error || '更新渠道失败');
         }
       } else {
-        // 创建渠道
-        const response = await fetch('/api/admin/channels', {
+        // 创建新渠道
+        // 使用 authFetch 替代 fetch
+        const response = await authFetch('/api/admin/channels', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            ...values,
-            tags,
-            downloadLink: values.downloadLink,
-            isDefault: values.isDefault,
-            shortLink: values.shortLink // 用户自定义的短链接
-          }),
+          body: JSON.stringify(values),
         });
 
         const data = await response.json();
@@ -342,7 +327,25 @@ export default function ChannelsPage() {
     } catch (error) {
       console.error('Failed to save channel:', error);
       message.error('保存渠道失败');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleModalOk = () => {
+    form.validateFields()
+      .then(values => {
+        // 处理 tags 字段，将逗号分隔的字符串转换为数组
+        if (values.tags) {
+          values.tags = values.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
+        } else {
+          values.tags = [];
+        }
+        handleSubmit(values);
+      })
+      .catch(info => {
+        console.log('Validate Failed:', info);
+      });
   };
 
   const handleModalCancel = () => {
@@ -370,9 +373,25 @@ export default function ChannelsPage() {
     }
   };
 
-  const handleViewQuestionnaire = (questionnaireId: string) => {
-    setSelectedQuestionnaireId(questionnaireId);
-    setIsQuestionnaireModalVisible(true);
+  const handleViewQuestionnaire = async (id: string) => {
+    try {
+      // 使用 authFetch 替代 fetch
+      const response = await authFetch(`/api/admin/channels?id=${id}`, {
+        method: 'GET',
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSelectedQuestionnaireId(data.channel.questionnaireId);
+        setIsQuestionnaireModalVisible(true);
+      } else {
+        message.error(data.error || '获取问卷失败');
+      }
+    } catch (error) {
+      console.error('Failed to fetch questionnaire:', error);
+      message.error('获取问卷失败');
+    }
   };
 
   // 新增函数：查看渠道问卷详情（带用户选择）

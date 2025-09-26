@@ -40,43 +40,38 @@ export async function verifyToken(token: string) {
 }
 
 /**
- * 设置认证 token 到 cookie
+ * 设置认证 token 到 cookie (已废弃，保留向后兼容)
  */
 export async function setAuthCookie(token: string) {
-  (await cookies()).set('admin-auth-token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: TOKEN_EXPIRATION,
-    path: '/',
-    sameSite: 'lax', // 改为 lax 以提高兼容性
-  });
+  // 已废弃，现在使用 localStorage
 }
 
 /**
- * 从 cookie 中获取认证 token
+ * 从 cookie 中获取认证 token (已废弃，保留向后兼容)
  */
 export async function getAuthToken() {
-  const cookieStore = await cookies();
-  return cookieStore.get('admin-auth-token')?.value;
+  // 已废弃，现在使用 localStorage
+  return null;
 }
 
 /**
- * 清除认证 cookie
+ * 清除认证 cookie (已废弃，保留向后兼容)
  */
 export async function clearAuthCookie() {
-  (await cookies()).delete('admin-auth-token');
+  // 已废弃，现在使用 localStorage
 }
 
 /**
  * 验证请求是否已认证
  */
 export async function isAuthenticated(request: NextRequest) {
-  const token = await getAuthToken();
-  
-  if (!token) {
+  // 从请求头中获取 Authorization
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return false;
   }
-
+  
+  const token = authHeader.substring(7); // 移除 'Bearer ' 前缀
   const payload = await verifyToken(token);
   return payload !== null;
 }
@@ -84,13 +79,14 @@ export async function isAuthenticated(request: NextRequest) {
 /**
  * 获取当前认证用户信息
  */
-export async function getCurrentUser() {
-  const token = await getAuthToken();
-  
-  if (!token) {
+export async function getCurrentUser(request: NextRequest) {
+  // 从请求头中获取 Authorization
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
   }
-
+  
+  const token = authHeader.substring(7); // 移除 'Bearer ' 前缀
   const payload = await verifyToken(token);
   return payload;
 }

@@ -1,111 +1,73 @@
-# 自定义基础镜像使用指南
-
-## 目录
-
-1. [概述](#概述)
-2. [使用方法](#使用方法)
-3. [配置自定义基础镜像](#配置自定义基础镜像)
-4. [最佳实践](#最佳实践)
+# 自定义基础镜像配置指南
 
 ## 概述
 
-本文档介绍了如何在构建Docker镜像时使用自定义的基础镜像，以提高构建速度和满足特定需求。
+本项目支持通过构建参数自定义 Docker 基础镜像，以满足不同环境的部署需求。默认使用官方 `node:18-alpine` 镜像。
 
 ## 使用方法
 
-### 通过构建参数指定基础镜像
+### 1. 使用默认基础镜像
 
-Dockerfile中已添加了BASE_IMAGE构建参数，允许在构建时指定基础镜像：
+```bash
+# 使用默认基础镜像构建
+docker build -t loan-app .
+```
 
-```dockerfile
-# 允许通过构建参数指定基础镜像
+### 2. 指定自定义基础镜像
+
+```bash
+# 指定自定义基础镜像构建
+docker build -t loan-app --build-arg BASE_IMAGE=node:18-alpine .
+```
+
+### 3. 服务器部署时指定基础镜像
+
+```bash
+# 服务器部署时指定基础镜像
+./scripts/server-deploy.sh --base-image node:18-alpine
+```
+
+## 配置说明
+
+### Dockerfile 中的基础镜像配置
+
+``dockerfile
+# 使用 ARG 指令定义基础镜像参数
 ARG BASE_IMAGE=node:18-alpine
 FROM ${BASE_IMAGE}
 ```
 
-### 在部署脚本中指定基础镜像
+### 服务器部署脚本中的基础镜像配置
+
+服务器部署脚本 `server-deploy.sh` 支持通过 `--base-image` 参数指定基础镜像：
 
 ```bash
-# 使用npm脚本
-npm run server:deploy -- --base-image registry.cn-hangzhou.aliyuncs.com/your-namespace/node:18-alpine
-
-# 或者直接运行脚本
-./scripts/server-deploy.sh --base-image registry.cn-hangzhou.aliyuncs.com/your-namespace/node:18-alpine
-```
-
-## 配置自定义基础镜像
-
-### 1. 使用官方Node.js镜像（推荐配合镜像加速使用）
-
-```bash
-# 使用官方Node.js镜像（默认，通过镜像加速拉取）
-./scripts/server-deploy.sh
-
-# 或者显式指定
-./scripts/server-deploy.sh --base-image docker.xuanyuan.me/library/node:18-alpine
-```
-
-### 2. 使用已缓存的本地镜像
-
-如果您已经在本地拉取了基础镜像，可以直接使用本地镜像以加快构建速度：
-
-```bash
-# 使用本地已缓存的镜像
-./scripts/server-deploy.sh --base-image docker.xuanyuan.me/library/node:18-alpine
-```
-
-### 3. 使用阿里云镜像
-
-如果您更喜欢使用阿里云的Node.js镜像：
-
-```bash
-# 使用阿里云Node.js镜像
-./scripts/server-deploy.sh --base-image registry.cn-hangzhou.aliyuncs.com/aliyun-node/node:18-alpine
-```
-
-### 4. 使用您自己的私有镜像
-
-如果您有自己的私有镜像仓库：
-
-```bash
-./scripts/server-deploy.sh --base-image registry.your-company.com/node:18-alpine
-```
-
-### 5. 使用本地缓存的镜像
-
-如果您已经拉取了基础镜像到本地：
-
-```bash
+# 使用自定义基础镜像部署
 ./scripts/server-deploy.sh --base-image node:18-alpine
 ```
 
+## 镜像选择建议
+
+### 官方镜像
+
+- `node:18-alpine` - 官方 Node.js 18 Alpine 镜像，体积小，适合生产环境
+- `node:18` - 官方 Node.js 18 镜像，基于 Debian，功能完整
+
+### 选择考虑因素
+
+1. **安全性**：优先选择官方维护的镜像
+2. **体积**：Alpine 版本体积更小，构建和部署更快
+3. **兼容性**：确保基础镜像与应用依赖兼容
+4. **维护性**：选择长期支持版本
+
 ## 最佳实践
 
-### 1. 镜像选择
+1. **生产环境**：推荐使用 `node:18-alpine` 以减小镜像体积
+2. **开发环境**：可使用 `node:18` 以获得更好的调试支持
+3. **版本锁定**：在生产环境中应锁定具体版本，避免自动升级导致的问题
+4. **定期更新**：定期更新基础镜像以获取安全补丁
 
-1. 选择与您应用兼容的基础镜像版本
-2. 优先使用经过验证的镜像（如阿里云提供的镜像）
-3. 考虑镜像大小和安全更新频率
-
-### 2. 镜像缓存
-
-1. 在服务器上预先拉取基础镜像以加快构建速度
-2. 定期更新基础镜像以获取安全补丁
-
-```bash
-# 预先拉取Node.js镜像
-docker pull docker.xuanyuan.me/library/node:18-alpine
-```
-
-### 3. 镜像验证
-
-1. 验证基础镜像的完整性和来源
-2. 在生产环境中使用经过测试的基础镜像
-
-### 4. 备用方案
-
-1. 准备多个基础镜像选项以防某个镜像不可用
-2. 在脚本中添加基础镜像可用性检查
+通过以上配置，您可以灵活地根据部署环境选择合适的基础镜像，同时保持项目的可维护性和安全性。
 
 ## 镜像加速
 

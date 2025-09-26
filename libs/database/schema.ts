@@ -33,6 +33,7 @@ export const customers = pgTable('customers', {
   questionnaireId: uuid('questionnaire_id').references(() => questionnaires.id), // 问卷id
   selectedQuestions: jsonb('selected_questions').$type<CustomerSelectedQuestion[]>(), // 用户选择的题目和答案
   channelLink: text('channel_link'), // 渠道链接
+  channelId: text('channel_id'), // 渠道ID（渠道编号）
   createdAt: timestamp('created_at').defaultNow().notNull(), // 创建时间
   updatedAt: timestamp('updated_at').defaultNow().notNull(), // 修改时间
 });

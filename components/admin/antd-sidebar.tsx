@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
-import { clearAuthCookie } from '@/libs/auth/auth-client';
+import { removeToken } from '@/libs/auth/auth-client';
 
 const { Sider } = Layout;
 
@@ -50,8 +50,8 @@ export default function AntdSidebar({ isCollapsed, onToggle }: AntdSidebarProps)
 
   const handleMenuClick = async ({ key }: { key: string }) => {
     if (key === 'logout') {
-      // 清除认证 cookie
-      await clearAuthCookie();
+      // 清除认证 token
+      removeToken();
       // 跳转到登录页面
       router.push('/admin');
     } else {

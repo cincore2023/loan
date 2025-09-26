@@ -25,6 +25,7 @@ import {
 } from 'antd';
 import AntdSidebar from '@/components/admin/antd-sidebar';
 import { v4 as uuidv4 } from 'uuid';
+import { authFetch } from '@/libs/auth/auth-client';
 
 const { Header, Content, Footer } = Layout;
 
@@ -47,6 +48,7 @@ interface Questionnaire {
   questions: Question[];
   createdAt: string;
   updatedAt: string;
+  isActive?: boolean; // 添加 isActive 属性
 }
 
 export default function QuestionnairesPage() {
@@ -70,7 +72,7 @@ export default function QuestionnairesPage() {
   const fetchQuestionnaires = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/questionnaires');
+      const response = await authFetch('/api/admin/questionnaires');
       const data = await response.json();
       
       if (response.ok) {
@@ -138,10 +140,14 @@ export default function QuestionnairesPage() {
     router.push('/admin/questionnaires/form');
   };
 
-  const handleDeleteQuestionnaire = async (id: string) => {
+  const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/admin/questionnaires?id=${id}`, {
+      const response = await authFetch('/api/admin/questionnaires', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
       });
       
       const data = await response.json();
@@ -155,6 +161,39 @@ export default function QuestionnairesPage() {
     } catch (error) {
       console.error('Failed to delete questionnaire:', error);
       message.error('删除问卷失败');
+    }
+  };
+
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      const questionnaire = questionnaires.find(q => q.id === id);
+      if (!questionnaire) return;
+
+      const response = await authFetch('/api/admin/questionnaires', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: questionnaire.id,
+          questionnaireNumber: questionnaire.questionnaireNumber,
+          questionnaireName: questionnaire.questionnaireName,
+          remark: questionnaire.remark,
+          isActive: !currentStatus
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        message.success('问卷状态更新成功');
+        fetchQuestionnaires(); // 重新获取问卷列表
+      } else {
+        message.error(data.error || '更新问卷状态失败');
+      }
+    } catch (error) {
+      console.error('Failed to update questionnaire status:', error);
+      message.error('更新问卷状态失败');
     }
   };
 
@@ -184,7 +223,7 @@ export default function QuestionnairesPage() {
       title: '题目数量',
       dataIndex: 'questionCount',
       key: 'questionCount',
-      render: (count: number) => count || 0,
+      render: (_: any, record: Questionnaire) => record.questions?.length || 0,
     },
     {
       title: '备注',
@@ -196,6 +235,16 @@ export default function QuestionnairesPage() {
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (time: string) => new Date(time).toLocaleDateString(),
+    },
+    {
+      title: '状态',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (isActive: boolean) => (
+        <Tag color={isActive ? 'green' : 'red'}>
+          {isActive ? '启用' : '禁用'}
+        </Tag>
+      ),
     },
     {
       title: '操作',

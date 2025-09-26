@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# 服务器Docker镜像源配置脚本
-# 用于在服务器上配置Docker使用镜像加速地址
+# 配置服务器 Docker 镜像加速脚本
+# 该脚本会修改 /etc/docker/daemon.json 文件以配置 Docker 镜像加速
 
 set -e
 
@@ -12,134 +12,114 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # 日志函数
-log() {
-  echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
 }
 
-info() {
-  echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
-warn() {
-  echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] WARNING:${NC} $1"
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
 }
 
-error() {
-  echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR:${NC} $1"
-}
-
-# 检查是否为root用户
+# 检查是否以 root 权限运行
 check_root() {
-  if [ "$EUID" -ne 0 ]; then
-    error "请以root用户运行此脚本"
-    exit 1
-  fi
-}
-
-# 配置Docker daemon
-configure_docker_daemon() {
-  local daemon_config="/etc/docker/daemon.json"
-  local registry_mirror="https://docker.xuanyuan.me"
-  
-  info "配置Docker daemon镜像源..."
-  
-  # 创建Docker目录（如果不存在）
-  mkdir -p /etc/docker
-  
-  # 如果配置文件已存在，备份它
-  if [ -f "$daemon_config" ]; then
-    info "备份现有配置文件..."
-    cp "$daemon_config" "${daemon_config}.backup.$(date +%Y%m%d_%H%M%S)"
-    
-    # 尝试解析现有的JSON配置
-    if command -v jq &> /dev/null; then
-      # 使用jq来合并配置
-      info "使用jq合并现有配置..."
-      # 创建新的配置（包含镜像源）
-      echo "{\"registry-mirrors\": [\"$registry_mirror\"]}" > /tmp/docker-config-new.json
-      
-      # 合并现有配置和新配置
-      jq -s '.[0] * .[1]' "$daemon_config" /tmp/docker-config-new.json > /tmp/docker-config-merged.json
-      
-      # 移动合并后的配置
-      mv /tmp/docker-config-merged.json "$daemon_config"
-      rm /tmp/docker-config-new.json
-    else
-      # 如果没有jq，直接备份并创建新配置
-      warn "未找到jq工具，将覆盖现有配置"
-      cat > "$daemon_config" << EOF
-{
-  "registry-mirrors": ["$registry_mirror"]
-}
-EOF
+    if [[ $EUID -ne 0 ]]; then
+        log_error "此脚本需要 root 权限运行"
+        log_info "请使用 sudo 运行此脚本:"
+        log_info "  sudo $0"
+        exit 1
     fi
-  else
-    # 创建新的配置
-    cat > "$daemon_config" << EOF
-{
-  "registry-mirrors": ["$registry_mirror"]
-}
-EOF
-  fi
-  
-  log "Docker daemon配置完成"
 }
 
-# 重启Docker服务
+# 检查 Docker 是否已安装
+check_docker() {
+    if ! command -v docker &> /dev/null; then
+        log_error "Docker 未安装"
+        log_info "请先安装 Docker"
+        exit 1
+    fi
+}
+
+# 配置 Docker 镜像加速
+configure_docker_mirror() {
+    local daemon_json="/etc/docker/daemon.json"
+    local registry_mirror="https://docker.mirrors.ustc.edu.cn"
+    
+    log_info "正在配置 Docker 镜像加速..."
+    
+    # 备份原始配置文件
+    if [[ -f "$daemon_json" ]]; then
+        log_info "备份原始配置文件到 $daemon_json.backup"
+        cp "$daemon_json" "$daemon_json.backup"
+    fi
+    
+    # 创建或更新 daemon.json 配置文件
+    cat > "$daemon_json" << EOF
+{
+  "registry-mirrors": [
+    "$registry_mirror"
+  ]
+}
+EOF
+    
+    log_info "Docker 镜像加速配置已完成"
+    log_info "配置的镜像加速地址: $registry_mirror"
+}
+
+# 重启 Docker 服务
 restart_docker() {
-  info "重启Docker服务..."
-  
-  # 尝试不同的系统服务管理器
-  if command -v systemctl &> /dev/null; then
-    systemctl restart docker
-  elif command -v service &> /dev/null; then
-    service docker restart
-  else
-    error "无法找到合适的服务管理器"
-    exit 1
-  fi
-  
-  log "Docker服务重启完成"
+    log_info "正在重启 Docker 服务..."
+    
+    # 尝试不同的系统服务管理器
+    if command -v systemctl &> /dev/null; then
+        systemctl restart docker
+    elif command -v service &> /dev/null; then
+        service docker restart
+    else
+        log_error "无法找到合适的服务管理器来重启 Docker"
+        log_info "请手动重启 Docker 服务"
+        exit 1
+    fi
+    
+    if [[ $? -eq 0 ]]; then
+        log_info "Docker 服务重启成功"
+    else
+        log_error "Docker 服务重启失败"
+        exit 1
+    fi
 }
 
 # 验证配置
 verify_configuration() {
-  info "验证配置..."
-  
-  # 等待Docker服务启动
-  sleep 5
-  
-  # 检查Docker信息
-  if docker info &> /dev/null; then
-    log "Docker服务运行正常"
+    log_info "正在验证 Docker 配置..."
     
-    # 显示镜像源配置
-    echo "当前Docker镜像源配置:"
-    docker info | grep -i registry
-  else
-    error "Docker服务启动失败"
-    exit 1
-  fi
+    # 等待 Docker 服务启动
+    sleep 3
+    
+    # 检查镜像加速配置
+    if docker info | grep -q "Registry Mirrors"; then
+        log_info "Docker 镜像加速配置验证成功"
+        docker info | grep -A 5 "Registry Mirrors"
+    else
+        log_warn "无法验证镜像加速配置，请手动检查"
+    fi
 }
 
 # 主函数
 main() {
-  log "开始配置服务器Docker镜像源..."
-  
-  # 检查root权限
-  check_root
-  
-  # 配置Docker daemon
-  configure_docker_daemon
-  
-  # 重启Docker服务
-  restart_docker
-  
-  # 验证配置
-  verify_configuration
-  
-  log "服务器Docker镜像源配置完成!"
-  echo "现在可以正常部署应用了"
+    log_info "开始配置服务器 Docker 镜像加速"
+    
+    check_root
+    check_docker
+    configure_docker_mirror
+    restart_docker
+    verify_configuration
+    
+    log_info "服务器 Docker 镜像加速配置完成"
+    log_info "建议测试镜像拉取速度以验证配置效果"
 }
 
 # 执行主函数

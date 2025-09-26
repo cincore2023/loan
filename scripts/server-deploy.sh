@@ -1,9 +1,12 @@
 #!/bin/bash
 
-# 服务器本地打包部署脚本
-# 用于在服务器上直接构建和部署应用，确保数据库数据持久化
+# 服务器部署脚本
+# 该脚本会构建 Docker 镜像并部署到服务器
 
 set -e
+
+# 默认基础镜像
+DEFAULT_BASE_IMAGE="node:18-alpine"
 
 # 颜色定义
 RED='\033[0;31m'
@@ -12,275 +15,128 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # 日志函数
-log() {
-  echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
 }
 
-info() {
-  echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
-warn() {
-  echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] WARNING:${NC} $1"
-}
-
-error() {
-  echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR:${NC} $1"
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
 }
 
 # 显示帮助信息
 show_help() {
-  echo "服务器本地打包部署脚本"
-  echo ""
-  echo "使用方法: $0 [options]"
-  echo ""
-  echo "选项:"
-  echo "  --env-file <file>   环境变量文件路径 (默认: .env)"
-  echo "  --tag <tag>         镜像标签 (默认: latest)"
-  echo "  --base-image <image> 基础镜像地址 (默认: docker.xuanyuan.me/library/node:18-alpine)"
-  echo "  --no-migrate        跳过数据库迁移"
-  echo "  --no-seed           跳过数据种子"
-  echo "  --help              显示帮助信息"
-  echo ""
-  echo "示例:"
-  echo "  $0"
-  echo "  $0 --tag v1.0.0"
-  echo "  $0 --base-image docker.xuanyuan.me/library/node:18-alpine"
+    echo "服务器部署脚本"
+    echo ""
+    echo "用法: $0 [选项]"
+    echo ""
+    echo "选项:"
+    echo "  -h, --help            显示帮助信息"
+    echo "  --base-image <image>  基础镜像地址 (默认: $DEFAULT_BASE_IMAGE)"
+    echo ""
+    echo "示例:"
+    echo "  $0"
+    echo "  $0 --base-image node:18-alpine"
 }
-
-# 默认值
-ENV_FILE=".env"
-TAG="latest"
-BASE_IMAGE="node:18-alpine"
-RUN_MIGRATE=true
-RUN_SEED=true
 
 # 解析命令行参数
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    --env-file)
-      ENV_FILE="$2"
-      shift 2
-      ;;
-    --tag)
-      TAG="$2"
-      shift 2
-      ;;
-    --base-image)
-      BASE_IMAGE="$2"
-      shift 2
-      ;;
-    --no-migrate)
-      RUN_MIGRATE=false
-      shift
-      ;;
-    --no-seed)
-      RUN_SEED=false
-      shift
-      ;;
-    --help)
-      show_help
-      exit 0
-      ;;
-    *)
-      error "未知选项: $1"
-      show_help
-      exit 1
-      ;;
-  esac
-done
-
-# 检查必要工具
-check_dependencies() {
-  info "检查依赖..."
-  
-  if ! command -v docker &> /dev/null; then
-    error "未找到 Docker。请先安装 Docker。"
-    exit 1
-  fi
-  
-  # 检查 docker-compose 或 docker compose
-  if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-    error "未找到 docker-compose。请先安装 docker-compose。"
-    exit 1
-  fi
-  
-  log "依赖检查通过"
+parse_args() {
+    BASE_IMAGE="$DEFAULT_BASE_IMAGE"
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            --base-image)
+                BASE_IMAGE="$2"
+                shift 2
+                ;;
+            *)
+                log_error "未知参数: $1"
+                show_help
+                exit 1
+                ;;
+        esac
+    done
 }
 
-# 检查Docker BuildKit支持
-check_buildkit_support() {
-  info "检查Docker BuildKit支持..."
-  
-  # 检查多种方式来确定BuildKit是否可用
-  if docker buildx version &> /dev/null || docker build --help | grep -q buildkit; then
-    log "Docker BuildKit可用"
-    return 0
-  else
-    info "Docker BuildKit不可用，将使用传统构建方式"
-    return 1
-  fi
+# 检查 Docker 是否已安装
+check_docker() {
+    if ! command -v docker &> /dev/null; then
+        log_error "Docker 未安装"
+        log_info "请先安装 Docker"
+        exit 1
+    fi
+    
+    if ! command -v docker-compose &> /dev/null; then
+        log_error "docker-compose 未安装"
+        log_info "请先安装 docker-compose"
+        exit 1
+    fi
 }
 
-# 检查环境变量文件
-check_env_file() {
-  if [ ! -f "$ENV_FILE" ]; then
-    error "环境变量文件不存在: $ENV_FILE"
-    echo "请创建环境变量文件或使用 --env-file 指定文件路径"
-    exit 1
-  fi
-  
-  info "使用环境变量文件: $ENV_FILE"
-}
-
-# 构建Docker镜像
+# 构建 Docker 镜像
 build_image() {
-  info "在服务器上构建Docker镜像..."
-  
-  # 准备优化的构建上下文
-  info "准备构建上下文..."
-  ./scripts/prepare-build-context.sh
-  
-  # 检查BuildKit支持
-  if check_buildkit_support; then
-    # 使用BuildKit构建，支持自定义基础镜像
-    info "使用BuildKit构建方式"
-    DOCKER_BUILDKIT=1 docker build \
-      --build-arg BUILDKIT_INLINE_CACHE=1 \
-      --build-arg BASE_IMAGE="$BASE_IMAGE" \
-      -t "loan-app:$TAG" \
-      -f Dockerfile.prod .
-  else
-    # 使用传统方式构建，支持自定义基础镜像
-    info "使用传统Docker构建方式"
+    log_info "正在构建 Docker 镜像..."
+    log_info "使用基础镜像: $BASE_IMAGE"
+    
+    # 构建镜像
     docker build \
-      --build-arg BASE_IMAGE="$BASE_IMAGE" \
-      -t "loan-app:$TAG" \
-      -f Dockerfile.prod .
-  fi
-  
-  # 清理构建上下文
-  if [ -d ".build-context" ]; then
-    rm -rf ".build-context"
-    info "已清理构建上下文"
-  fi
-  
-  log "Docker镜像构建完成: loan-app:$TAG"
+        --build-arg BASE_IMAGE="$BASE_IMAGE" \
+        -t loan-app \
+        .
+    
+    log_info "Docker 镜像构建完成"
 }
 
-# 停止当前服务
-stop_services() {
-  info "停止当前服务..."
-  
-  # 确定使用哪个docker-compose命令
-  local compose_cmd="docker-compose"
-  if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
-    compose_cmd="docker compose"
-  fi
-  
-  # 检查服务是否正在运行
-  if $compose_cmd -f docker-compose.deploy.yml ps | grep -q "Up"; then
-    $compose_cmd -f docker-compose.deploy.yml down
-    log "服务已停止"
-  else
-    info "服务未运行"
-  fi
-  
-  # 强制释放3000端口
-  if lsof -i :3000 &> /dev/null; then
-    info "释放被占用的3000端口..."
-    lsof -ti :3000 | xargs kill -9 2>/dev/null || true
-  fi
+# 部署服务
+deploy_services() {
+    log_info "正在部署服务..."
+    
+    # 停止现有服务
+    docker-compose -f docker-compose.deploy.yml down
+    
+    # 启动服务
+    docker-compose -f docker-compose.deploy.yml up -d
+    
+    log_info "服务部署完成"
 }
 
-# 启动服务
-start_services() {
-  info "启动服务..."
-  
-  # 确定使用哪个docker-compose命令
-  local compose_cmd="docker-compose"
-  if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
-    compose_cmd="docker compose"
-  fi
-  
-  # 使用环境变量文件和部署配置文件启动服务
-  $compose_cmd -f docker-compose.deploy.yml --env-file "$ENV_FILE" up -d
-  
-  log "服务启动完成"
-}
-
-# 等待服务启动
-wait_for_services() {
-  info "等待服务启动..."
-  
-  # 确定使用哪个docker-compose命令
-  local compose_cmd="docker-compose"
-  if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
-    compose_cmd="docker compose"
-  fi
-  
-  # 等待一段时间让服务启动
-  sleep 10
-  
-  # 检查服务状态
-  if $compose_cmd -f docker-compose.deploy.yml ps | grep -q "Up"; then
-    log "服务运行正常"
-  else
-    error "服务启动失败"
-    echo "查看日志以获取更多信息:"
-    echo "  $compose_cmd -f docker-compose.deploy.yml logs"
-    exit 1
-  fi
-}
-
-# 运行数据库初始化
-run_database_init() {
-  info "运行数据库初始化..."
-  
-  # 使用专门的数据库初始化脚本
-  if ./scripts/init-database.sh; then
-    log "数据库初始化完成"
-  else
-    error "数据库初始化失败"
-    exit 1
-  fi
-}
-
-# 显示服务状态
-show_status() {
-  info "服务状态:"
-  
-  # 确定使用哪个docker-compose命令
-  local compose_cmd="docker-compose"
-  if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
-    compose_cmd="docker compose"
-  fi
-  
-  $compose_cmd -f docker-compose.deploy.yml ps
+# 验证部署
+verify_deployment() {
+    log_info "正在验证部署..."
+    
+    # 等待服务启动
+    sleep 10
+    
+    # 检查服务状态
+    if docker-compose -f docker-compose.deploy.yml ps | grep -q "Up"; then
+        log_info "服务部署验证成功"
+    else
+        log_error "服务部署验证失败"
+        docker-compose -f docker-compose.deploy.yml ps
+        exit 1
+    fi
 }
 
 # 主函数
 main() {
-  log "开始服务器本地打包部署..."
-  
-  check_dependencies
-  check_env_file
-  build_image
-  stop_services
-  start_services
-  wait_for_services
-  run_database_init
-  show_status
-  
-  log "服务器本地打包部署完成!"
-  echo "应用地址: http://localhost:$(grep APP_PORT "$ENV_FILE" | cut -d '=' -f2)"
-  echo "数据库地址: localhost:$(grep DB_PORT "$ENV_FILE" | cut -d '=' -f2)"
-  
-  info "数据库数据已持久化存储，下次重新运行不会丢失数据"
-  info "数据库迁移和初始化数据已自动完成"
+    log_info "开始服务器部署"
+    
+    parse_args "$@"
+    check_docker
+    build_image
+    deploy_services
+    verify_deployment
+    
+    log_info "服务器部署完成"
+    log_info "访问地址: http://localhost:3000"
 }
 
 # 执行主函数
 main "$@"
-
-

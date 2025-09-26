@@ -52,6 +52,7 @@ export async function GET(request: Request) {
         idCard: customers.idCard,
         submissionTime: customers.submissionTime,
         channelLink: customers.channelLink,
+        channelId: customers.channelId, // 添加渠道ID
         createdAt: customers.createdAt,
         updatedAt: customers.updatedAt,
         selectedQuestions: customers.selectedQuestions,
@@ -158,6 +159,7 @@ export async function POST(request: NextRequest) {
           idCard: customers.idCard,
           submissionTime: customers.submissionTime,
           channelLink: customers.channelLink,
+          channelId: customers.channelId, // 添加渠道ID
           createdAt: customers.createdAt,
           updatedAt: customers.updatedAt,
           selectedQuestions: customers.selectedQuestions,
@@ -261,9 +263,31 @@ export async function POST(request: NextRequest) {
       questionnaireId: validatedData.questionnaireId && validatedData.questionnaireId !== '' ? validatedData.questionnaireId : null,
       selectedQuestions: validatedData.selectedQuestions || [],
       channelLink: validatedData.channelLink,
+      channelId: validatedData.channelId, // 添加渠道ID
       createdAt: new Date(),
       updatedAt: new Date()
     }).returning();
+    
+    // 如果有提交时间且有选择的问题，则更新渠道的问卷填写总数
+    if (validatedData.submissionTime && validatedData.selectedQuestions && validatedData.selectedQuestions.length > 0) {
+      // 优先使用渠道ID，如果没有则尝试使用渠道链接
+      let channel = null;
+      
+      if (validatedData.channelId) {
+        // 根据渠道编号找到对应的渠道（注意：前端传递的是渠道编号，不是数据库ID）
+        channel = await db.select().from(channels).where(eq(channels.channelNumber, validatedData.channelId)).limit(1);
+      } else if (validatedData.channelLink) {
+        // 根据渠道链接找到对应的渠道
+        channel = await db.select().from(channels).where(eq(channels.shortLink, validatedData.channelLink)).limit(1);
+      }
+      
+      if (channel && channel.length > 0) {
+        await db.update(channels).set({
+          questionnaireSubmitCount: (channel[0].questionnaireSubmitCount || 0) + 1,
+          updatedAt: new Date()
+        }).where(eq(channels.id, channel[0].id));
+      }
+    }
     
     return NextResponse.json(newCustomer[0], { status: 201 });
   } catch (error) {
@@ -311,6 +335,7 @@ export async function PUT(request: NextRequest) {
       questionnaireId: validatedData.questionnaireId && validatedData.questionnaireId !== '' ? validatedData.questionnaireId : (existingCustomer[0].questionnaireId || null),
       selectedQuestions: validatedData.selectedQuestions || existingCustomer[0].selectedQuestions || [],
       channelLink: validatedData.channelLink || existingCustomer[0].channelLink,
+      channelId: validatedData.channelId || existingCustomer[0].channelId, // 更新渠道ID
       updatedAt: new Date(),
     }).where(eq(customers.id, body.id)).returning();
     
@@ -324,8 +349,8 @@ export async function PUT(request: NextRequest) {
       let channel = null;
       
       if (validatedData.channelId) {
-        // 根据渠道ID找到对应的渠道
-        channel = await db.select().from(channels).where(eq(channels.id, validatedData.channelId)).limit(1);
+        // 根据渠道编号找到对应的渠道（注意：前端传递的是渠道编号，不是数据库ID）
+        channel = await db.select().from(channels).where(eq(channels.channelNumber, validatedData.channelId)).limit(1);
       } else if (validatedData.channelLink) {
         // 根据渠道链接找到对应的渠道
         channel = await db.select().from(channels).where(eq(channels.shortLink, validatedData.channelLink)).limit(1);

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '@/libs/database/db';
 import { admins } from '@/libs/database/schema';
 import { eq } from 'drizzle-orm';
-import { generateToken, setAuthCookie } from '@/libs/auth/auth';
+import { generateToken } from '@/libs/auth/auth';
 import { verifyPassword } from '@/libs/auth/password';
 
 // 定义登录数据的验证模式
@@ -43,14 +43,11 @@ export async function POST(request: NextRequest) {
       name: adminUser[0].name,
     });
     
-    // 设置认证 cookie
-    await setAuthCookie(token);
-    
     // 更新最后登录时间
     await db.update(admins).set({ lastLoginAt: new Date() }).where(eq(admins.id, adminUser[0].id));
     
-    // 登录成功，返回用户信息和 token
-    return NextResponse.json({
+    // 创建响应
+    const response = NextResponse.json({
       message: '登录成功',
       user: {
         id: adminUser[0].id,
@@ -58,6 +55,16 @@ export async function POST(request: NextRequest) {
       },
       token
     }, { status: 200 });
+    
+    // 设置 HttpOnly cookie
+    response.cookies.set('admin-auth-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60, // 1 hour
+      path: '/',
+    });
+    
+    return response;
     
   } catch (error) {
     if (error instanceof z.ZodError) {

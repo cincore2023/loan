@@ -8,6 +8,13 @@
       "when": 1758684468449,
       "tag": "0000_heavy_wendigo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1758684468450,
+      "tag": "0001_add_channel_id_to_customers",
+      "breakpoints": true
     }
   ]
 }

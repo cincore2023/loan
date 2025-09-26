@@ -16,6 +16,7 @@ import {
 import { Suspense } from 'react';
 import AntdSidebar from '@/components/admin/antd-sidebar';
 import QuestionnaireForm, { QuestionnaireFormRef } from '@/components/admin/questionnaire-form';
+import { authFetch } from '@/libs/auth/auth-client';
 
 const { Header, Content, Footer } = Layout;
 
@@ -78,7 +79,7 @@ function QuestionnaireFormContent() {
   const fetchQuestionnaire = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/questionnaires');
+      const response = await authFetch('/api/admin/questionnaires');
       const data = await response.json();
       
       if (response.ok) {
@@ -110,7 +111,7 @@ function QuestionnaireFormContent() {
     try {
       if (mode === 'edit' && id) {
         // 更新问卷
-        const response = await fetch('/api/admin/questionnaires', {
+        const response = await authFetch('/api/admin/questionnaires', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -131,7 +132,7 @@ function QuestionnaireFormContent() {
         }
       } else {
         // 创建问卷
-        const response = await fetch('/api/admin/questionnaires', {
+        const response = await authFetch('/api/admin/questionnaires', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

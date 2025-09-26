@@ -18,7 +18,7 @@ import {
   Typography,
   theme
 } from 'antd';
-import { isClientAuthenticated } from '@/libs/auth/auth-client';
+import { isAuthenticated, saveToken } from '@/libs/auth/auth-client';
 
 const { Title, Text } = Typography;
 
@@ -32,7 +32,7 @@ export default function AdminLogin() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const auth = isClientAuthenticated();
+        const auth = isAuthenticated();
         if (auth) {
           router.push('/admin/customers');
         }
@@ -65,6 +65,8 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (response.ok) {
+        // 保存 token 到 localStorage
+        saveToken(data.token);
         toast.success('登录成功');
         // 登录成功后跳转到客户资料页面
         router.push('/admin/customers');
@@ -79,13 +81,13 @@ export default function AdminLogin() {
     }
   };
 
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div>正在检查登录状态...</div>
-      </div>
-    );
-  }
+  // if (checkingAuth) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  //       <div>正在检查登录状态...</div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

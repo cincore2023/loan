@@ -1,4 +1,4 @@
-# 使用官方Node.js基础镜像（通过 docker.xuanyuan.me 镜像加速拉取）
+# 使用官方Node.js基础镜像
 ARG BASE_IMAGE=node:18-alpine
 FROM ${BASE_IMAGE}
 

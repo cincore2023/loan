@@ -1,77 +1,85 @@
-# Docker镜像源配置说明
-
-## 目录
-
-1. [概述](#概述)
-2. [配置方法](#配置方法)
-3. [验证配置](#验证配置)
-4. [相关脚本](#相关脚本)
+# Docker 镜像加速配置指南
 
 ## 概述
 
-为了提高Docker镜像的拉取和构建速度，我们配置了镜像加速服务。镜像地址为: `https://docker.xuanyuan.me`
+为了提高 Docker 镜像的拉取和构建速度，您可以配置 Docker 镜像加速服务。
 
 ## 配置方法
 
-### 方法1: 系统级配置（推荐）
+### 1. 系统级配置（推荐）
 
-适用于有root权限的服务器环境:
+编辑或创建 `/etc/docker/daemon.json` 文件：
 
-```bash
-# 运行配置脚本
-sudo ./scripts/configure-server-docker-mirror.sh
+```json
+{
+  "registry-mirrors": [
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://hub-mirror.c.163.com"
+  ]
+}
 ```
 
-此方法会:
-- 修改 `/etc/docker/daemon.json` 配置文件
-- 重启Docker服务
-- 永久生效
-
-### 方法2: 环境变量配置
-
-适用于没有root权限的环境:
+然后重启 Docker 服务：
 
 ```bash
-# 设置环境变量
-export DOCKER_REGISTRY_MIRROR="https://docker.xuanyuan.me"
-export DOCKER_BUILDKIT=1
-
-# 或者运行我们提供的脚本
-source ./scripts/set-docker-mirror-env.sh
+sudo systemctl restart docker
 ```
 
-此方法会:
-- 仅在当前shell会话中生效
-- 不需要root权限
+### 2. 环境变量配置
 
-### 方法3: 命令行参数
-
-在构建时直接指定镜像源:
+设置环境变量以在构建时使用镜像加速：
 
 ```bash
-DOCKER_BUILDKIT=1 docker build --registry-mirror=https://docker.xuanyuan.me -t loan-app -f Dockerfile.prod .
+# 设置镜像加速地址
+export DOCKER_REGISTRY_MIRROR="https://docker.mirrors.ustc.edu.cn"
+
+# 使用镜像加速构建
+DOCKER_BUILDKIT=1 docker build --registry-mirror=${DOCKER_REGISTRY_MIRROR} -t loan-app .
 ```
+
+### 3. 命令行参数配置
+
+在 docker build 命令中直接指定镜像加速地址：
+
+```bash
+# 使用 BuildKit 和镜像加速构建
+DOCKER_BUILDKIT=1 docker build --registry-mirror=https://docker.mirrors.ustc.edu.cn -t loan-app .
+
+# 传统构建模式和镜像加速
+docker build --registry-mirror=https://docker.mirrors.ustc.edu.cn -t loan-app .
+```
+
+## 常用镜像加速服务
+
+### 国内镜像加速服务
+
+1. 中科大镜像加速: `https://docker.mirrors.ustc.edu.cn`
+2. 网易镜像加速: `https://hub-mirror.c.163.com`
+3. 阿里云镜像加速: `https://<your-account>.mirror.aliyuncs.com` (需要注册阿里云账号获取)
+
+### 配置建议
+
+1. **生产环境**：建议使用系统级配置以确保所有 Docker 操作都能受益于镜像加速
+2. **开发环境**：可以使用环境变量或命令行参数进行临时配置
+3. **多镜像源**：可以配置多个镜像源以提高可用性
 
 ## 验证配置
 
-### 使用测试脚本
+### 检查 Docker 配置
 
 ```bash
-./scripts/test-docker-mirror.sh
+# 查看 Docker 系统信息
+docker info
+
+# 查看镜像加速配置
+docker info | grep -i mirror
 ```
 
-### 手动验证
+### 测试镜像拉取速度
 
 ```bash
-# 检查Docker信息
-docker info | grep -i registry
-
-# 测试拉取镜像的速度
-time docker pull hello-world
+# 测试镜像拉取
+time docker pull node:18-alpine
 ```
 
-## 相关脚本
-
-- `scripts/configure-server-docker-mirror.sh` - 服务器系统级配置脚本
-- `scripts/set-docker-mirror-env.sh` - 环境变量配置脚本
-- `scripts/test-docker-mirror.sh` - 配置验证脚本
+通过正确配置 Docker 镜像加速，可以显著提高镜像拉取和构建速度，特别是在网络条件较差的环境中。

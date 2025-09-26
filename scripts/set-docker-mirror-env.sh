@@ -1,20 +1,17 @@
 #!/bin/bash
 
-# 简化版Docker镜像源配置脚本
-# 通过环境变量配置Docker镜像源
+# 设置 Docker 镜像加速环境变量脚本
+# 该脚本会设置 DOCKER_REGISTRY_MIRROR 环境变量
 
-echo "设置Docker镜像源环境变量..."
+# 设置镜像加速地址
+export DOCKER_REGISTRY_MIRROR="https://docker.mirrors.ustc.edu.cn"
 
-# 设置Docker镜像源
-export DOCKER_REGISTRY_MIRROR="https://docker.xuanyuan.me"
-export DOCKER_BUILDKIT=1
+# 显示设置的环境变量
+echo "已设置 Docker 镜像加速环境变量:"
+echo "  export DOCKER_REGISTRY_MIRROR=$DOCKER_REGISTRY_MIRROR"
 
-echo "Docker镜像源已设置为: $DOCKER_REGISTRY_MIRROR"
-echo "请在运行部署命令前执行以下命令以应用配置:"
-echo "  export DOCKER_REGISTRY_MIRROR=https://docker.xuanyuan.me"
-echo "  export DOCKER_BUILDKIT=1"
-
-# 也可以直接在构建命令中使用
+# 使用示例
 echo ""
-echo "或者在构建时直接使用:"
-echo "  DOCKER_BUILDKIT=1 docker build --registry-mirror=https://docker.xuanyuan.me -t loan-app -f Dockerfile.prod ."
+echo "使用方法:"
+echo "  # 在构建时使用镜像加速"
+echo "  DOCKER_BUILDKIT=1 docker build --registry-mirror=\$DOCKER_REGISTRY_MIRROR -t loan-app ."

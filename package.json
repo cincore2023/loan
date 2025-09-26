@@ -21,7 +21,7 @@
     "docker:test-env": "sh scripts/test-docker-environment.sh",
     "docker:prepare-context": "sh scripts/prepare-build-context.sh",
     "server:deploy": "sh scripts/server-deploy.sh",
-    "server:deploy:custom": "sh scripts/server-deploy.sh --base-image docker.xuanyuan.me/library/node:18-alpine"
+    "server:deploy:custom": "sh scripts/server-deploy.sh --base-image node:18-alpine"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.2",

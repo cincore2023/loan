@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect, useMemo } from 'react';
 import { 
@@ -30,8 +30,8 @@ import CustomerQuestionViewModal from '@/components/admin/customer-question-view
 import { provinces, cities, districts } from '@/lib/china-division';
 import { formatCurrency, formatPhoneNumber, formatIdCard, formatDateTime } from '@/lib/utils';
 import { exportCustomersToExcel, exportMultipleQuestionnaires } from '@/lib/export-utils';
+import { authFetch } from '@/libs/auth/auth-client';
 import type { Dayjs } from 'dayjs';
-import dayjs from 'dayjs';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { RangePicker } = DatePicker;
@@ -95,8 +95,6 @@ export default function CustomersPage() {
     const fetchCustomers = async () => {
       try {
         setLoading(true);
-        
-        // 构建查询参数
         const params = new URLSearchParams();
         if (searchKeyword) params.append('search', searchKeyword);
         if (provinceSearch) params.append('province', provinceSearch);
@@ -105,8 +103,8 @@ export default function CustomersPage() {
         if (dateSearchRange[0]) params.append('startDate', dateSearchRange[0].format('YYYY-MM-DD'));
         if (dateSearchRange[1]) params.append('endDate', dateSearchRange[1].format('YYYY-MM-DD'));
         
-        // 调用真实的API获取客户数据
-        const response = await fetch(`/api/admin/customers?${params.toString()}`);
+        // 使用 authFetch 替代 fetch
+        const response = await authFetch(`/api/admin/customers?${params.toString()}`);
         const data = await response.json();
         
         if (response.ok) {
@@ -323,7 +321,7 @@ export default function CustomersPage() {
     
     try {
       // 调用API获取分组数据
-      const response = await fetch('/api/admin/customers?action=export', {
+      const response = await authFetch('/api/admin/customers?action=export', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
