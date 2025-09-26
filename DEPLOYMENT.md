@@ -46,7 +46,9 @@ chmod +x scripts/*.sh
 
 ## Docker镜像源配置
 
-为了提高Docker镜像构建和拉取速度，建议配置镜像加速。
+为了提高Docker镜像构建和拉取速度，部署脚本已配置使用 `https://docker.xuanyuan.me` 镜像加速地址。
+
+无论使用 BuildKit 还是传统 Docker 构建方式，都会自动应用镜像加速来提高基础镜像的拉取速度。
 
 详细配置说明请参考 [DOCKER_MIRROR.md](DOCKER_MIRROR.md) 文档。
 

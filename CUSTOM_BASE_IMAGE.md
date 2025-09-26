@@ -101,3 +101,17 @@ docker pull registry.cn-hangzhou.aliyuncs.com/aliyun-node/node:18-alpine
 ## 镜像加速
 
 本项目已配置使用镜像加速地址 `https://docker.xuanyuan.me` 来加速基础镜像的拉取过程。
+
+在构建过程中，无论是使用 BuildKit 还是传统 Docker 构建方式，都会通过以下方式应用镜像加速：
+
+1. **BuildKit 构建方式**：
+   ```bash
+   DOCKER_BUILDKIT=1 docker build --registry-mirror=https://docker.xuanyuan.me ...
+   ```
+
+2. **传统构建方式**：
+   ```bash
+   docker build --registry-mirror=https://docker.xuanyuan.me ...
+   ```
+
+这样可以确保无论使用哪种构建方式，都能享受到镜像加速带来的更快拉取速度。

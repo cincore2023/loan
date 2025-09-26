@@ -150,10 +150,11 @@ build_image() {
       -t "loan-app:$TAG" \
       -f Dockerfile.prod .
   else
-    # 使用传统方式构建，支持自定义基础镜像
-    info "使用传统Docker构建方式（无镜像加速）"
+    # 使用传统方式构建，支持自定义基础镜像和镜像加速
+    info "使用传统Docker构建方式（使用镜像加速）"
     docker build \
       --build-arg BASE_IMAGE="$BASE_IMAGE" \
+      --registry-mirror="$registry_mirror" \
       -t "loan-app:$TAG" \
       -f Dockerfile.prod .
   fi
