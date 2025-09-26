@@ -23,3 +23,54 @@ build/
 .env.test.local
 .env.production.local
 .pnpm-debug.log
+
+# Next.js
+.next/
+out/
+
+# Testing
+.nyc_output/
+coverage/
+.jest/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Build outputs
+dist/
+build/
+.release/
+
+# Dependencies
+node_modules/
+.npm/
+.yarn/
+.pnp/
+
+# Docker
+docker-compose.yml
+docker-compose.prod.yml
+docker-compose.deploy.yml
+
+# Scripts
+scripts/
+
+# Backup files
+*.bak
+*.backup
+
+# Temporary files
+tmp/
+temp/
+
+# Database backups
+backups/

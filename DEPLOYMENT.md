@@ -9,6 +9,7 @@ loan/
 │   ├── server-deploy.sh      # 服务器本地打包部署脚本
 │   ├── db-backup.sh          # 数据库备份恢复脚本
 │   ├── quick-start.sh        # 快速启动脚本
+│   ├── init-database.sh      # 数据库初始化脚本
 │   ├── configure-server-docker-mirror.sh  # 服务器Docker镜像源配置脚本
 │   ├── test-docker-environment.sh     # Docker环境兼容性测试脚本
 │   ├── set-docker-mirror-env.sh    # 环境变量配置脚本
@@ -171,3 +172,44 @@ docker-compose -f docker-compose.deploy.yml restart app
 | APP_PORT | 应用端口 | 3000 |
 
 注意：在生产环境中，请务必修改默认的数据库密码，使用强密码以确保安全性。
+
+## 数据库迁移和初始化数据
+
+部署脚本会自动执行以下数据库操作：
+
+1. **数据库迁移**：自动应用最新的数据库结构变更
+2. **初始化数据**：自动创建默认的管理员、问卷和渠道数据
+
+这些操作在应用部署完成后自动执行，确保系统具备完整的初始数据。
+
+### 默认初始化数据
+
+部署完成后，系统会自动创建以下初始化数据：
+
+- **默认管理员账户**：
+  - 用户名：`admin`
+  - 密码：`admin123`
+  - 请在首次登录后立即修改默认密码
+
+- **默认问卷**：包含贷款申请相关的默认问题
+
+- **默认渠道**：用于测试的默认渠道配置
+
+### 手动执行数据库操作
+
+如果需要手动执行数据库操作，可以使用以下命令：
+
+```bash
+# 手动执行数据库迁移
+npm run db:migrate
+
+# 手动执行数据种子
+npm run db:seed
+
+# 在部署环境中执行数据库迁移
+docker-compose -f docker-compose.deploy.yml exec app pnpm run db:migrate
+
+# 在部署环境中执行数据种子
+docker-compose -f docker-compose.deploy.yml exec app pnpm run db:seed
+```
+

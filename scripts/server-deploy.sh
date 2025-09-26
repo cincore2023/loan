@@ -37,7 +37,7 @@ show_help() {
   echo "选项:"
   echo "  --env-file <file>   环境变量文件路径 (默认: .env)"
   echo "  --tag <tag>         镜像标签 (默认: latest)"
-  echo "  --base-image <image> 基础镜像地址 (默认: node:18-alpine)"
+  echo "  --base-image <image> 基础镜像地址 (默认: docker.xuanyuan.me/library/node:18-alpine)"
   echo "  --no-migrate        跳过数据库迁移"
   echo "  --no-seed           跳过数据种子"
   echo "  --help              显示帮助信息"
@@ -45,13 +45,13 @@ show_help() {
   echo "示例:"
   echo "  $0"
   echo "  $0 --tag v1.0.0"
-  echo "  $0 --base-image node:18-alpine"
+  echo "  $0 --base-image docker.xuanyuan.me/library/node:18-alpine"
 }
 
 # 默认值
 ENV_FILE=".env"
 TAG="latest"
-BASE_IMAGE="node:18-alpine"
+BASE_IMAGE="docker.xuanyuan.me/library/node:18-alpine"
 RUN_MIGRATE=true
 RUN_SEED=true
 
@@ -221,43 +221,16 @@ wait_for_services() {
   fi
 }
 
-# 运行数据库迁移
-run_migrations() {
-  if [ "$RUN_MIGRATE" = true ]; then
-    info "运行数据库迁移..."
-    
-    # 确定使用哪个docker-compose命令
-    local compose_cmd="docker-compose"
-    if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
-      compose_cmd="docker compose"
-    fi
-    
-    # 等待数据库启动
-    sleep 10
-    
-    # 运行迁移
-    $compose_cmd -f docker-compose.deploy.yml exec app pnpm run db:migrate
-    log "数据库迁移完成"
+# 运行数据库初始化
+run_database_init() {
+  info "运行数据库初始化..."
+  
+  # 使用专门的数据库初始化脚本
+  if ./scripts/init-database.sh; then
+    log "数据库初始化完成"
   else
-    info "跳过数据库迁移"
-  fi
-}
-
-# 运行数据种子
-run_seeds() {
-  if [ "$RUN_SEED" = true ]; then
-    info "运行数据种子..."
-    
-    # 确定使用哪个docker-compose命令
-    local compose_cmd="docker-compose"
-    if ! command -v docker-compose &> /dev/null && docker compose version &> /dev/null; then
-      compose_cmd="docker compose"
-    fi
-    
-    $compose_cmd -f docker-compose.deploy.yml exec app pnpm run db:seed
-    log "数据种子运行完成"
-  else
-    info "跳过数据种子"
+    error "数据库初始化失败"
+    exit 1
   fi
 }
 
@@ -284,8 +257,7 @@ main() {
   stop_services
   start_services
   wait_for_services
-  run_migrations
-  run_seeds
+  run_database_init
   show_status
   
   log "服务器本地打包部署完成!"
@@ -293,6 +265,7 @@ main() {
   echo "数据库地址: localhost:$(grep DB_PORT "$ENV_FILE" | cut -d '=' -f2)"
   
   info "数据库数据已持久化存储，下次重新运行不会丢失数据"
+  info "数据库迁移和初始化数据已自动完成"
 }
 
 # 执行主函数

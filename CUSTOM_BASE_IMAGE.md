@@ -42,10 +42,19 @@ npm run server:deploy -- --base-image registry.cn-hangzhou.aliyuncs.com/your-nam
 ./scripts/server-deploy.sh
 
 # 或者显式指定
-./scripts/server-deploy.sh --base-image node:18-alpine
+./scripts/server-deploy.sh --base-image docker.xuanyuan.me/library/node:18-alpine
 ```
 
-### 2. 使用阿里云镜像
+### 2. 使用已缓存的本地镜像
+
+如果您已经在本地拉取了基础镜像，可以直接使用本地镜像以加快构建速度：
+
+```bash
+# 使用本地已缓存的镜像
+./scripts/server-deploy.sh --base-image docker.xuanyuan.me/library/node:18-alpine
+```
+
+### 3. 使用阿里云镜像
 
 如果您更喜欢使用阿里云的Node.js镜像：
 
@@ -54,7 +63,7 @@ npm run server:deploy -- --base-image registry.cn-hangzhou.aliyuncs.com/your-nam
 ./scripts/server-deploy.sh --base-image registry.cn-hangzhou.aliyuncs.com/aliyun-node/node:18-alpine
 ```
 
-### 3. 使用您自己的私有镜像
+### 4. 使用您自己的私有镜像
 
 如果您有自己的私有镜像仓库：
 
@@ -62,7 +71,7 @@ npm run server:deploy -- --base-image registry.cn-hangzhou.aliyuncs.com/your-nam
 ./scripts/server-deploy.sh --base-image registry.your-company.com/node:18-alpine
 ```
 
-### 4. 使用本地缓存的镜像
+### 5. 使用本地缓存的镜像
 
 如果您已经拉取了基础镜像到本地：
 
@@ -84,8 +93,8 @@ npm run server:deploy -- --base-image registry.cn-hangzhou.aliyuncs.com/your-nam
 2. 定期更新基础镜像以获取安全补丁
 
 ```bash
-# 预先拉取阿里云Node.js镜像
-docker pull registry.cn-hangzhou.aliyuncs.com/aliyun-node/node:18-alpine
+# 预先拉取Node.js镜像
+docker pull docker.xuanyuan.me/library/node:18-alpine
 ```
 
 ### 3. 镜像验证
