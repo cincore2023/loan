@@ -140,6 +140,19 @@ npm run update
 
 注意：在生产环境中，请务必修改默认的数据库密码，使用强密码以确保安全性。
 
+## Docker镜像源配置
+
+为了提高Docker镜像构建和拉取速度，建议配置阿里云镜像加速。
+
+详细配置说明请参考 [DOCKER_MIRROR.md](DOCKER_MIRROR.md) 文档。
+
+### 验证配置
+
+运行测试脚本验证配置是否生效：
+```bash
+./scripts/test-docker-mirror.sh
+```
+
 ## 注意事项
 
 1. **数据安全**: 数据库使用Docker卷持久化存储，即使容器被删除，数据也不会丢失

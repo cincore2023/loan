@@ -17,7 +17,10 @@
     "deploy:full": "sh scripts/deploy.sh --build --migrate --seed",
     "update": "sh scripts/update.sh",
     "db:backup": "sh scripts/db-backup.sh backup",
-    "db:restore": "sh scripts/db-backup.sh restore"
+    "db:restore": "sh scripts/db-backup.sh restore",
+    "docker:config": "sudo sh scripts/configure-docker-mirror.sh",
+    "docker:test": "sh scripts/test-docker-mirror.sh",
+    "docker:set-env": "source scripts/set-docker-mirror-env.sh"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.2",

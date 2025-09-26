@@ -107,11 +107,27 @@ check_dependencies() {
   log "依赖检查通过"
 }
 
+# 检查Docker镜像源配置
+check_docker_mirror() {
+  info "检查Docker镜像源配置..."
+  
+  # 检查是否配置了阿里云镜像源
+  if docker info 2>/dev/null | grep -q "https://pw6rk6ai.mirror.aliyuncs.com"; then
+    log "Docker镜像源已正确配置"
+  else
+    warn "Docker镜像源未配置或配置不正确"
+    echo "建议运行以下命令配置Docker镜像源:"
+    echo "  sudo ./scripts/configure-docker-mirror.sh"
+  fi
+}
+
 # 构建镜像
 build_images() {
   if [ "$BUILD" = true ]; then
     info "构建 Docker 镜像..."
-    docker-compose -f docker-compose.prod.yml build
+    # 使用阿里云镜像加速
+    local registry_mirror="${DOCKER_REGISTRY_MIRROR:-https://pw6rk6ai.mirror.aliyuncs.com}"
+    DOCKER_BUILDKIT=1 docker build --build-arg BUILDKIT_INLINE_CACHE=1 --registry-mirror="$registry_mirror" -t loan-app -f Dockerfile.prod .
     log "Docker 镜像构建完成"
   else
     info "跳过镜像构建"
@@ -121,6 +137,9 @@ build_images() {
 # 启动服务
 start_services() {
   info "启动服务..."
+  # 先拉取数据库镜像（如果需要）
+  docker-compose -f docker-compose.prod.yml pull postgres
+  # 启动所有服务
   docker-compose -f docker-compose.prod.yml up -d
   log "服务启动完成"
 }
@@ -159,6 +178,7 @@ main() {
   log "开始部署到 $ENV 环境"
   
   check_dependencies
+  check_docker_mirror
   build_images
   start_services
   run_migrations

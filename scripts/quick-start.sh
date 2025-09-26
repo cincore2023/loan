@@ -21,6 +21,11 @@ fi
 echo "🔧 设置脚本权限..."
 chmod +x scripts/*.sh
 
+# 设置Docker镜像加速
+echo "⚡ 设置Docker镜像加速..."
+export DOCKER_REGISTRY_MIRROR="https://pw6rk6ai.mirror.aliyuncs.com"
+export DOCKER_BUILDKIT=1
+
 # 部署应用
 echo "📦 部署应用..."
 ./scripts/deploy.sh --build --migrate --seed

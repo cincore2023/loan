@@ -27,9 +27,7 @@ services:
 
   # Next.js 应用
   app:
-    build: 
-      context: .
-      dockerfile: Dockerfile.prod
+    image: loan-app:latest
     container_name: loan_app
     restart: always
     ports:
