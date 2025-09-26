@@ -23,7 +23,7 @@ chmod +x scripts/*.sh
 
 # 设置Docker镜像加速
 echo "⚡ 设置Docker镜像加速..."
-export DOCKER_REGISTRY_MIRROR="https://pw6rk6ai.mirror.aliyuncs.com"
+export DOCKER_REGISTRY_MIRROR="https://docker.xuanyuan.me"
 export DOCKER_BUILDKIT=1
 
 # 部署应用

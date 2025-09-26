@@ -100,4 +100,4 @@ docker pull registry.cn-hangzhou.aliyuncs.com/aliyun-node/node:18-alpine
 
 ## 镜像加速
 
-本项目已配置使用阿里云镜像加速地址 `https://pw6rk6ai.mirror.aliyuncs.com` 来加速基础镜像的拉取过程。
+本项目已配置使用镜像加速地址 `https://docker.xuanyuan.me` 来加速基础镜像的拉取过程。

@@ -136,7 +136,7 @@ build_image() {
   info "在服务器上构建Docker镜像..."
   
   # 设置Docker镜像源加速
-  local registry_mirror="https://pw6rk6ai.mirror.aliyuncs.com"
+  local registry_mirror="https://docker.xuanyuan.me"
   
   # 检查BuildKit支持
   if check_buildkit_support; then

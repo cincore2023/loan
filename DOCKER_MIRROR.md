@@ -11,7 +11,7 @@
 
 ## 概述
 
-为了提高Docker镜像的拉取和构建速度，我们配置了阿里云镜像加速服务。镜像地址为: `https://pw6rk6ai.mirror.aliyuncs.com`
+为了提高Docker镜像的拉取和构建速度，我们配置了镜像加速服务。镜像地址为: `https://docker.xuanyuan.me`
 
 ## 配置方法
 
@@ -22,7 +22,7 @@
 
 ```bash
 # 设置环境变量
-export DOCKER_REGISTRY_MIRROR="https://pw6rk6ai.mirror.aliyuncs.com"
+export DOCKER_REGISTRY_MIRROR="https://docker.xuanyuan.me"
 export DOCKER_BUILDKIT=1
 
 # 或者运行我们提供的脚本
@@ -38,7 +38,7 @@ source ./scripts/set-docker-mirror-env.sh
 在构建时直接指定镜像源:
 
 ```bash
-DOCKER_BUILDKIT=1 docker build --registry-mirror=https://pw6rk6ai.mirror.aliyuncs.com -t loan-app -f Dockerfile.prod .
+DOCKER_BUILDKIT=1 docker build --registry-mirror=https://docker.xuanyuan.me -t loan-app -f Dockerfile.prod .
 ```
 
 ## 验证配置
