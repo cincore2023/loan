@@ -4,18 +4,11 @@
 const TOKEN_KEY = 'admin-auth-token';
 
 /**
- * 保存 token 到 localStorage
- */
-export function saveToken(token: string) {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(TOKEN_KEY, token);
-  }
-}
-
-/**
- * 从 localStorage 获取 token
+ * 从 localStorage 获取 token (向后兼容)
+ * 主要通过服务端 cookie 进行认证
  */
 export function getToken() {
+  // 这个函数现在只用于向后兼容
   if (typeof window !== 'undefined') {
     return localStorage.getItem(TOKEN_KEY);
   }
@@ -23,7 +16,7 @@ export function getToken() {
 }
 
 /**
- * 从 localStorage 删除 token
+ * 从 localStorage 删除 token (向后兼容)
  */
 export function removeToken() {
   if (typeof window !== 'undefined') {
@@ -34,37 +27,52 @@ export function removeToken() {
 /**
  * 检查用户是否已认证
  */
-export function isAuthenticated() {
-  const token = getToken();
-  return !!token; // 简单检查，实际应用中可能需要验证 token 的有效性
+export async function isAuthenticated() {
+  try {
+    // 直接调用服务端认证检查 API
+    const response = await fetch('/api/admin/auth/check', {
+      method: 'GET',
+      credentials: 'include' // 确保发送 cookie
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Authentication check failed:', error);
+    return false;
+  }
 }
 
 /**
- * 获取认证头
+ * 获取认证头 (向后兼容)
  */
-export function getAuthHeader() {
+export function getAuthHeader(): { [key: string]: string } {
+  // 使用 cookie 认证时，不需要手动添加 Authorization 头
+  // 但为了向后兼容，仍然提供此函数
   const token = getToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  if (token) {
+    return {
+      'Authorization': `Bearer ${token}`
+    };
+  }
+  return {};
 }
 
 /**
  * 带认证的 fetch 包装函数
  */
 export async function authFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
-  const authHeader = getAuthHeader();
-  
   // 合并 headers
   const headers = new Headers(init?.headers);
-  headers.set('Content-Type', 'application/json');
   
-  // 只有当 authHeader 有内容时才设置 Authorization 头
-  if (authHeader.Authorization) {
-    headers.set('Authorization', authHeader.Authorization);
+  // 确保 Content-Type 设置正确
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
   }
   
   const config: RequestInit = {
     ...init,
     headers,
+    credentials: 'include' // 确保发送 cookie
   };
   
   return fetch(input, config);
@@ -79,16 +87,15 @@ export async function login(username: string, password: string) {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ username, password }),
+    credentials: 'include', // 确保发送和接收 cookie
+    body: JSON.stringify({ username, password })
   });
 
   const data = await response.json();
 
   if (response.ok) {
-    // 保存 token (虽然现在使用 cookie，但仍保存到 localStorage 作为备用)
-    if (data.token) {
-      saveToken(data.token);
-    }
+    // 服务端会设置 HttpOnly cookie
+    // 客户端不需要存储 token
     return { success: true, data };
   } else {
     return { success: false, error: data.error };
@@ -98,10 +105,15 @@ export async function login(username: string, password: string) {
 /**
  * 登出函数
  */
-export function logout() {
-  // 删除 localStorage 中的 token
-  removeToken();
-  
-  // 注意：由于我们使用的是 HttpOnly cookie，无法通过 JavaScript 删除
-  // 需要调用后端 API 来删除 cookie，或者刷新页面后 cookie 会自动过期
+export async function logout() {
+  try {
+    // 调用后端登出 API
+    // 服务端会清除 cookie
+    await fetch('/api/admin/logout', {
+      method: 'POST',
+      credentials: 'include' // 确保发送 cookie
+    });
+  } catch (error) {
+    console.error('Logout API call failed:', error);
+  }
 }

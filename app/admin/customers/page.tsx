@@ -22,15 +22,15 @@ import {
   Col,
   message,
   Cascader,
-  Typography,
   Dropdown
 } from 'antd';
 import AntdSidebar from '@/components/admin/antd-sidebar';
 import CustomerQuestionViewModal from '@/components/admin/customer-question-view-modal';
 import { provinces, cities, districts } from '@/lib/china-division';
-import { formatCurrency, formatPhoneNumber, formatIdCard, formatDateTime } from '@/lib/utils';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { exportCustomersToExcel, exportMultipleQuestionnaires } from '@/lib/export-utils';
-import { authFetch } from '@/libs/auth/auth-client';
+import { authFetch, isAuthenticated } from '@/libs/auth/auth-client';
+import { useRouter } from 'next/navigation';
 import type { Dayjs } from 'dayjs';
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -86,40 +86,77 @@ export default function CustomersPage() {
   const [citySearch, setCitySearch] = useState('');
   const [districtSearch, setDistrictSearch] = useState('');
   const [dateSearchRange, setDateSearchRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
+  const router = useRouter();
   
   const {
     token: { colorBgContainer },
   } = theme.useToken();
 
+  // 获取客户数据的函数
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (searchKeyword) params.append('search', searchKeyword);
+      if (provinceSearch) params.append('province', provinceSearch);
+      if (citySearch) params.append('city', citySearch);
+      if (districtSearch) params.append('district', districtSearch);
+      if (dateSearchRange[0]) params.append('startDate', dateSearchRange[0].format('YYYY-MM-DD'));
+      if (dateSearchRange[1]) params.append('endDate', dateSearchRange[1].format('YYYY-MM-DD'));
+      
+      // 使用新的 authFetch 函数
+      const response = await authFetch(`/api/admin/customers?${params.toString()}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setCustomers(data.customers);
+      } else {
+        throw new Error(data.error || '获取客户数据失败');
+      }
+    } catch (error) {
+      console.error('获取客户数据失败:', error);
+      message.error('获取客户数据时发生错误');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 检查用户认证状态
   useEffect(() => {
-    const fetchCustomers = async () => {
+    const checkAuth = async () => {
       try {
-        setLoading(true);
-        const params = new URLSearchParams();
-        if (searchKeyword) params.append('search', searchKeyword);
-        if (provinceSearch) params.append('province', provinceSearch);
-        if (citySearch) params.append('city', citySearch);
-        if (districtSearch) params.append('district', districtSearch);
-        if (dateSearchRange[0]) params.append('startDate', dateSearchRange[0].format('YYYY-MM-DD'));
-        if (dateSearchRange[1]) params.append('endDate', dateSearchRange[1].format('YYYY-MM-DD'));
+        console.log('开始检查用户认证状态...');
+        const auth = await isAuthenticated();
+        console.log('认证检查结果:', auth);
         
-        // 使用 authFetch 替代 fetch
-        const response = await authFetch(`/api/admin/customers?${params.toString()}`);
-        const data = await response.json();
-        
-        if (response.ok) {
-          setCustomers(data.customers);
+        if (!auth) {
+          // 如果未认证，记录详细信息并重定向到登录页面
+          console.warn('用户未认证，重定向到登录页面', {
+            timestamp: new Date().toISOString(),
+            redirectFrom: '/admin/customers',
+            redirectTo: '/admin'
+          });
+          router.push('/admin');
         } else {
-          throw new Error(data.error || '获取客户数据失败');
+          console.log('用户已认证，开始获取客户数据...');
+          fetchCustomers();
         }
       } catch (error) {
-        console.error('获取客户数据失败:', error);
-        message.error('获取客户数据时发生错误');
-      } finally {
-        setLoading(false);
+        // 记录详细的错误信息
+        console.error('检查认证状态失败:', {
+          error: error,
+          timestamp: new Date().toISOString(),
+          redirectFrom: '/admin/customers',
+          redirectTo: '/admin'
+        });
+        router.push('/admin');
       }
     };
 
+    checkAuth();
+  }, [router]);
+
+  useEffect(() => {
     fetchCustomers();
   }, [searchKeyword, provinceSearch, citySearch, districtSearch, dateSearchRange]);
 
@@ -173,15 +210,6 @@ export default function CustomersPage() {
     } else {
       setDistrictFilter('');
     }
-  };
-
-  const handleClearFilters = () => {
-    setSearchTerm('');
-    setProvinceFilter('');
-    setCityFilter('');
-    setDistrictFilter('');
-    setDateRange([null, null]);
-    setRegionCascaderValue([]);
   };
 
   const handleDateChange = (dates: [Dayjs | null, Dayjs | null] | null) => {

@@ -18,7 +18,7 @@ import {
   Typography,
   theme
 } from 'antd';
-import { isAuthenticated, saveToken } from '@/libs/auth/auth-client';
+import { isAuthenticated, login } from '@/libs/auth/auth-client';
 
 const { Title, Text } = Typography;
 
@@ -32,9 +32,10 @@ export default function AdminLogin() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const auth = isAuthenticated();
+        const auth = await isAuthenticated();
         if (auth) {
-          router.push('/admin/customers');
+          console.log('用户已认证，重定向到客户页面');
+          router.replace('/admin/customers');
         }
       } catch (error) {
         console.error('检查认证状态失败:', error);
@@ -50,30 +51,41 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      // 实际登录 API 调用
-      const response = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // 使用新的登录函数
+      const result = await login(values.username, values.password);
+
+      if (result.success) {
+        // 登录成功日志
+        console.log('用户登录成功:', {
           username: values.username,
-          password: values.password
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // 保存 token 到 localStorage
-        saveToken(data.token);
+          timestamp: new Date().toISOString(),
+          userId: result.data?.user?.id
+        });
+        
+        // 显示成功消息并立即跳转，减少等待时间
         toast.success('登录成功');
-        // 登录成功后跳转到客户资料页面
-        router.push('/admin/customers');
+        // 使用 setTimeout 确保提示消息有时间显示
+        setTimeout(() => {
+          router.replace('/admin/customers');
+        }, 100); // 100ms 延迟，让用户能看到成功消息
       } else {
-        toast.error(data.error || '登录失败，请检查用户名和密码');
+        // 登录失败日志
+        console.warn('用户登录失败:', {
+          username: values.username,
+          timestamp: new Date().toISOString(),
+          error: result.error
+        });
+        
+        toast.error(result.error || '登录失败，请检查用户名和密码');
       }
     } catch (error) {
+      // 网络错误日志
+      console.error('登录网络错误:', {
+        username: values.username,
+        timestamp: new Date().toISOString(),
+        error: error
+      });
+      
       console.error('网络错误:', error);
       toast.error('网络错误，请稍后再试');
     } finally {
@@ -81,13 +93,13 @@ export default function AdminLogin() {
     }
   };
 
-  // if (checkingAuth) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-  //       <div>正在检查登录状态...</div>
-  //     </div>
-  //   );
-  // }
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div>正在检查登录状态...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

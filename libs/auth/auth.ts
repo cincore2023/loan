@@ -13,6 +13,9 @@ const JWT_SECRET = getJwtSecret();
 // Token 过期时间 (1小时)
 const TOKEN_EXPIRATION = 60 * 60;
 
+// Cookie 名称
+const TOKEN_COOKIE_NAME = 'admin-auth-token';
+
 /**
  * 生成 JWT token
  */
@@ -40,38 +43,60 @@ export async function verifyToken(token: string) {
 }
 
 /**
- * 设置认证 token 到 cookie (已废弃，保留向后兼容)
+ * 设置认证 token 到 HttpOnly Cookie
  */
 export async function setAuthCookie(token: string) {
-  // 已废弃，现在使用 localStorage
+  const cookieStore = await cookies();
+  cookieStore.set(TOKEN_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: TOKEN_EXPIRATION,
+    path: '/',
+    sameSite: 'strict',
+  });
 }
 
 /**
- * 从 cookie 中获取认证 token (已废弃，保留向后兼容)
+ * 从请求中获取认证 token (优先从 cookie)
  */
-export async function getAuthToken() {
-  // 已废弃，现在使用 localStorage
+export async function getAuthToken(request: NextRequest) {
+  // 首先尝试从 cookie 中获取 token
+  const cookieStore = await cookies();
+  const token = cookieStore.get(TOKEN_COOKIE_NAME)?.value;
+  
+  if (token) {
+    return token;
+  }
+  
+  // 如果 cookie 中没有 token，则尝试从 Authorization 头中获取（向后兼容）
+  const authHeader = request.headers.get('authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const bearerToken = authHeader.substring(7); // 移除 'Bearer ' 前缀
+    return bearerToken;
+  }
+  
   return null;
 }
 
 /**
- * 清除认证 cookie (已废弃，保留向后兼容)
+ * 清除认证 cookie
  */
 export async function clearAuthCookie() {
-  // 已废弃，现在使用 localStorage
+  const cookieStore = await cookies();
+  cookieStore.delete(TOKEN_COOKIE_NAME);
 }
 
 /**
  * 验证请求是否已认证
  */
 export async function isAuthenticated(request: NextRequest) {
-  // 从请求头中获取 Authorization
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  // 获取 token
+  const token = await getAuthToken(request);
+  if (!token) {
     return false;
   }
-  
-  const token = authHeader.substring(7); // 移除 'Bearer ' 前缀
+
+  // 验证 token
   const payload = await verifyToken(token);
   return payload !== null;
 }
@@ -80,13 +105,13 @@ export async function isAuthenticated(request: NextRequest) {
  * 获取当前认证用户信息
  */
 export async function getCurrentUser(request: NextRequest) {
-  // 从请求头中获取 Authorization
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  // 获取 token
+  const token = await getAuthToken(request);
+  if (!token) {
     return null;
   }
-  
-  const token = authHeader.substring(7); // 移除 'Bearer ' 前缀
+
+  // 验证并返回用户信息
   const payload = await verifyToken(token);
   return payload;
 }

@@ -43,7 +43,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const auth = isAuthenticated();
+        const auth = await isAuthenticated();
         if (!auth) {
           router.push('/admin');
         } else {

@@ -3,7 +3,14 @@ import type { NextRequest } from 'next/server';
 import { isAuthenticatedInMiddleware } from '@/libs/auth/auth-middleware';
 
 export async function middleware(request: NextRequest) {
-  console.log('Middleware triggered for:', request.nextUrl.pathname);
+  console.log('=== Middleware Execution Start ===');
+  console.log('Request URL:', request.url);
+  console.log('Request pathname:', request.nextUrl.pathname);
+  console.log('Request method:', request.method);
+  
+  // 检查请求的主机头
+  const host = request.headers.get('host');
+  console.log('Request host:', host);
   
   // 检查是否访问管理员路由
   if (request.nextUrl.pathname.startsWith('/admin')) {
@@ -20,7 +27,9 @@ export async function middleware(request: NextRequest) {
         console.log('User is authenticated, redirecting to customers page');
         const url = request.nextUrl.clone();
         url.pathname = '/admin/customers';
-        return NextResponse.redirect(url);
+        console.log('Redirecting to:', url.toString());
+        // 使用 rewrite 而不是 redirect 来避免 307 重定向
+        return NextResponse.rewrite(url);
       }
       
       console.log('User is not authenticated, allowing access to login page');
@@ -37,16 +46,26 @@ export async function middleware(request: NextRequest) {
       // 未认证用户重定向到登录页面
       const url = request.nextUrl.clone();
       url.pathname = '/admin';
-      return NextResponse.redirect(url);
+      console.log('Redirecting to:', url.toString());
+      // 使用 rewrite 而不是 redirect 来避免 307 重定向
+      return NextResponse.rewrite(url);
     }
     
     console.log('User is authenticated, allowing access to admin page');
   }
   
+  // 处理 API 路由
+  if (request.nextUrl.pathname.startsWith('/api')) {
+    console.log('API route accessed:', request.nextUrl.pathname);
+    return NextResponse.next();
+  }
+  
+  console.log('Allowing access to other routes');
+  // 允许其他所有路由
   return NextResponse.next();
 }
 
 // 配置中间件匹配的路径
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin/:path*', '/api/:path*'],
 };

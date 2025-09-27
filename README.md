@@ -166,6 +166,169 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5433/loan_db
 docker-compose up -d
 ```
 
+### 使用 Nginx 和 HTTPS 部署（推荐用于生产环境）
+
+为了在生产环境中提供更好的安全性和性能，建议使用 Nginx 作为反向代理服务器，并启用 HTTPS。
+
+#### 1. 生成 SSL 证书
+
+首先，生成自签名 SSL 证书（在生产环境中，建议使用有效的 SSL 证书）：
+
+```bash
+# 运行脚本生成 SSL 证书
+./scripts/generate-ssl.sh
+```
+
+或者手动执行：
+
+```bash
+# 创建 SSL 证书目录
+mkdir -p ssl
+
+# 生成私钥
+openssl genrsa -out ssl/key.pem 2048
+
+# 生成自签名证书
+openssl req -new -x509 -key ssl/key.pem -out ssl/cert.pem -days 365 -subj "/CN=42.121.104.68"
+```
+
+#### 2. 配置 Nginx
+
+项目中已包含 Nginx 配置文件 [nginx.conf](nginx.conf)，该配置文件已经设置好：
+
+- HTTP 到 HTTPS 的重定向
+- SSL 配置
+- 静态文件缓存
+- 反向代理到 Next.js 应用
+- WebSocket 支持
+
+#### 3. 使用 Docker Compose 部署
+
+使用包含 Nginx 的 Docker Compose 配置文件进行部署：
+
+```bash
+# 使用包含 Nginx 的配置文件启动服务
+docker-compose -f docker-compose.deploy.yml up -d
+```
+
+此命令将启动三个服务：
+1. PostgreSQL 数据库
+2. Next.js 应用
+3. Nginx 反向代理
+
+#### 4. 访问应用
+
+部署完成后，可以通过以下地址访问应用：
+
+- 管理后台: https://42.121.104.68/admin
+- H5 页面: https://42.121.104.68/h5
+
+#### 5. 配置说明
+
+Nginx 配置文件中的关键设置：
+
+- 监听 80 端口并重定向到 HTTPS
+- 监听 443 端口处理 HTTPS 请求
+- 使用 Docker 网络中的服务名称 [app] 连接到 Next.js 应用
+- 静态资源缓存优化
+- WebSocket 连接支持
+
+环境变量配置：
+
+- NEXT_PUBLIC_BASE_URL 设置为 https://42.121.104.68
+- NEXT_PUBLIC_API_URL 设置为 https://42.121.104.68/api
+
+### 服务器部署（使用 pm2 运行 Next.js 应用）
+
+如果您希望在服务器上部署时只将数据库运行在 Docker 容器中，而 Next.js 应用使用 pm2 运行，可以使用以下命令：
+
+```
+# 使用默认配置部署
+pnpm server:deploy:pm2
+
+# 使用自定义配置部署
+pnpm server:deploy:pm2 --base-image node:18-alpine --port 307
+```
+
+这个命令会：
+1. 检查必要工具（Docker、docker-compose、Node.js、pnpm、pm2）
+2. 配置环境变量
+3. 配置 Docker 镜像加速
+4. 安装项目依赖
+5. 启动数据库容器
+6. 构建 Next.js 应用
+7. 初始化数据库（运行迁移和种子数据）
+8. 使用 pm2 启动应用
+9. 验证部署结果
+
+> 注意：使用此部署方式需要服务器上已安装 pm2。如果未安装，可以使用以下命令安装：
+> ```bash
+> npm install -g pm2
+> ```
+
+### 测试数据库初始化
+
+如果您想测试数据库迁移和种子数据是否正常工作，可以使用以下命令：
+
+```
+# 测试数据库初始化
+pnpm test:db-init
+```
+
+这个命令会：
+1. 启动 PostgreSQL 数据库服务
+2. 运行数据库迁移脚本创建表结构
+3. 运行种子数据脚本插入初始数据
+4. 验证数据是否正确创建
+
+### 直接运行 Docker 镜像
+
+如果您已经构建了 Docker 镜像并希望直接运行它，可以使用以下命令：
+
+```
+# 使用默认配置运行镜像
+pnpm run:app
+
+# 使用自定义配置运行镜像
+pnpm run:app --port 307 --tag v1.0.0
+
+# 同时启动数据库服务
+pnpm run:app --with-db --port 307
+
+# 启动数据库服务并运行数据库迁移
+pnpm run:app --with-db --migrate --port 307
+```
+
+这个命令会：
+1. 检查指定标签的镜像是否存在
+2. 创建默认的环境变量文件（如果不存在）
+3. 运行容器并映射指定端口
+4. 等待应用启动并验证运行状态
+
+如果您使用 `--with-db` 参数，脚本还会启动 PostgreSQL 数据库服务。
+
+如果您使用 `--migrate` 参数，脚本会在应用启动后运行数据库迁移和种子数据脚本。
+
+> 注意：使用 `--migrate` 参数需要同时使用 `--with-db` 参数，因为数据库迁移需要数据库服务运行。
+
+### 本地构建并部署到服务器
+
+为了提高部署效率，您可以选择在本地构建应用，然后将构建好的镜像部署到服务器：
+
+```
+# 使用默认配置进行本地构建并部署
+pnpm local:deploy <服务器地址> <服务器用户名>
+
+# 使用自定义配置进行本地构建并部署
+pnpm local:deploy --base-image node:18-alpine --tag v1.0.0 <服务器地址> <服务器用户名>
+```
+
+> 注意：我们已经添加了必要的 Dockerfile 文件来支持本地构建。如果您之前遇到 "no such file or directory" 错误，请确保您使用的是最新版本的代码。
+
+> 如果在部署过程中遇到 Docker 镜像拉取超时问题（如 "net/http: request canceled while waiting for connection"），这是因为脚本会自动将本地构建的镜像上传到服务器，避免从 Docker Hub 拉取镜像。
+
+这种方式会在本地完成所有构建工作，然后将构建好的镜像和配置文件上传到服务器，避免在服务器上消耗资源进行构建。
+
 ### 手动部署
 
 1. 安装依赖：

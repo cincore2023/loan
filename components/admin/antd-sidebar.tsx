@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
-import { removeToken } from '@/libs/auth/auth-client';
+import { logout } from '@/libs/auth/auth-client';
 
 const { Sider } = Layout;
 
@@ -49,9 +49,10 @@ export default function AntdSidebar({ isCollapsed, onToggle }: AntdSidebarProps)
   ];
 
   const handleMenuClick = async ({ key }: { key: string }) => {
+    console.log('key', key);
     if (key === 'logout') {
-      // 清除认证 token
-      removeToken();
+      // 调用登出函数
+      await logout();
       // 跳转到登录页面
       router.push('/admin');
     } else {

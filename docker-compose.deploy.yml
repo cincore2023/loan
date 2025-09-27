@@ -34,11 +34,32 @@ services:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-loan_db}
       - NODE_ENV=production
       - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-secret-key-for-development-only}
+      - HOST=0.0.0.0
+      - PORT=3000
+      - NEXT_PUBLIC_BASE_URL=https://42.121.104.68
+      - NEXT_PUBLIC_API_URL=https://42.121.104.68/api
     env_file:
       - .env.production
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - loan_network
+
+  # Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: loan_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro  # SSL 证书目录
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - app
     networks:
       - loan_network
 

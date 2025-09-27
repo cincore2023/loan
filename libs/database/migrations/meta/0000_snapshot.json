@@ -1,5 +1,5 @@
 {
-  "id": "813f03ad-2c54-4299-808b-cceb3ba61125",
+  "id": "d4e11b9e-e852-430b-bdcb-bbc6890e4a1f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -262,6 +262,12 @@
         },
         "channel_link": {
           "name": "channel_link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "channel_id": {
+          "name": "channel_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false

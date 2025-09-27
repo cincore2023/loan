@@ -39,6 +39,7 @@ CREATE TABLE "customers" (
 	"questionnaire_id" uuid,
 	"selected_questions" jsonb,
 	"channel_link" text,
+	"channel_id" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
