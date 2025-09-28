@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '@/libs/database/db';
 import { admins } from '@/libs/database/schema';
 import { eq } from 'drizzle-orm';
-import { generateToken, setAuthCookie } from '@/libs/auth/auth';
+import { generateToken } from '@/libs/auth/auth';
 import { verifyPassword } from '@/libs/auth/password';
 
 // 定义登录数据的验证模式
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // 更新最后登录时间
     await db.update(admins).set({ lastLoginAt: new Date() }).where(eq(admins.id, adminUser[0].id));
     
-    // 设置 HttpOnly Cookie
+    // 创建响应
     const response = NextResponse.json({
       message: '登录成功',
       user: {
@@ -55,22 +55,20 @@ export async function POST(request: NextRequest) {
       }
     }, { status: 200 });
     
-    // 设置认证 cookie
-    await setAuthCookie(token);
+    // 使用Next.js的cookies API设置cookie
+    response.cookies.set('admin-auth-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60, // 1小时
+      path: '/',
+      sameSite: 'strict',
+    });
     
     return response;
     
   } catch (error) {
-    // 添加详细的错误日志
-    console.error('Login API error:', error);
-    
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: '验证失败', details: error.issues }, { status: 400 });
-    }
-    
-    // 返回更具体的错误信息
-    if (error instanceof Error) {
-      return NextResponse.json({ error: '服务器内部错误', details: error.message }, { status: 500 });
     }
     
     return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });

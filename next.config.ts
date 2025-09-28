@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
     'http://192.168.0.106:3001',
     'http://192.168.0.106:3002',
   ],
+  // 保留生产构建中的 console.log 语句
+  compiler: {
+    removeConsole: false,
+  },
   // 处理重定向问题
   async redirects() {
     return [

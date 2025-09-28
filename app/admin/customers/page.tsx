@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   UsergroupAddOutlined,
   EyeOutlined,
@@ -12,7 +12,6 @@ import {
   Input, 
   Table, 
   Tag, 
-  Select, 
   DatePicker, 
   Layout, 
   theme,
@@ -92,10 +91,28 @@ export default function CustomersPage() {
     token: { colorBgContainer },
   } = theme.useToken();
 
+  // 自定义hook用于比较日期范围
+  const useDateRangeComparison = (dateRange: [Dayjs | null, Dayjs | null]) => {
+    return useMemo(() => {
+      if (!dateRange[0] && !dateRange[1]) return 'null-null';
+      const start = dateRange[0] ? dateRange[0].format('YYYY-MM-DD') : 'null';
+      const end = dateRange[1] ? dateRange[1].format('YYYY-MM-DD') : 'null';
+      return `${start}-${end}`;
+    }, [dateRange[0]?.format('YYYY-MM-DD'), dateRange[1]?.format('YYYY-MM-DD')]);
+  };
+
+  const dateSearchRangeKey = useDateRangeComparison(dateSearchRange);
+
   // 获取客户数据的函数
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('开始获取客户数据...');
+      
+      // 确保token已经正确读取
+      const token = localStorage.getItem('admin-auth-token');
+      console.log('fetchCustomers前的token:', token);
+      
       const params = new URLSearchParams();
       if (searchKeyword) params.append('search', searchKeyword);
       if (provinceSearch) params.append('province', provinceSearch);
@@ -106,7 +123,9 @@ export default function CustomersPage() {
       
       // 使用新的 authFetch 函数
       const response = await authFetch(`/api/admin/customers?${params.toString()}`);
+      console.log('客户数据API响应:', response.status);
       const data = await response.json();
+      console.log('客户数据:', data);
       
       if (response.ok) {
         setCustomers(data.customers);
@@ -119,15 +138,18 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchKeyword, provinceSearch, citySearch, districtSearch, dateSearchRange]);
 
   // 检查用户认证状态
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log('开始检查用户认证状态...');
+        console.log('=== 开始检查用户认证状态 ===');
+        console.log('检查前localStorage中的token:', localStorage.getItem('admin-auth-token'));
+        
         const auth = await isAuthenticated();
         console.log('认证检查结果:', auth);
+        console.log('检查后localStorage中的token:', localStorage.getItem('admin-auth-token'));
         
         if (!auth) {
           // 如果未认证，记录详细信息并重定向到登录页面
@@ -149,16 +171,26 @@ export default function CustomersPage() {
           redirectFrom: '/admin/customers',
           redirectTo: '/admin'
         });
-        router.push('/admin');
+        // 即使检查失败，也尝试获取数据，让API返回具体的错误
+        fetchCustomers();
+      } finally {
+        console.log('=== 认证检查结束 ===');
       }
     };
 
+    console.log('开始检查用户认证状态...');
+    console.log('当前localStorage中的token:', localStorage.getItem('admin-auth-token'));
     checkAuth();
-  }, [router]);
+  }, [router, fetchCustomers]);
 
+  // 当搜索条件变化时重新获取数据
   useEffect(() => {
-    fetchCustomers();
-  }, [searchKeyword, provinceSearch, citySearch, districtSearch, dateSearchRange]);
+    // 只有当初始数据加载完成后才执行搜索
+    if (!loading) {
+      console.log('搜索条件变化，重新获取数据');
+      fetchCustomers();
+    }
+  }, [searchKeyword, provinceSearch, citySearch, districtSearch, dateSearchRangeKey, loading, fetchCustomers]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);

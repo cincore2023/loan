@@ -34,8 +34,7 @@ export default function AdminLogin() {
       try {
         const auth = await isAuthenticated();
         if (auth) {
-          console.log('用户已认证，重定向到客户页面');
-          router.replace('/admin/customers');
+          router.push('/admin/customers');
         }
       } catch (error) {
         console.error('检查认证状态失败:', error);
@@ -49,46 +48,38 @@ export default function AdminLogin() {
 
   const handleSubmit = async (values: { username: string; password: string; remember: boolean }) => {
     setLoading(true);
-
+    console.log('=== 登录表单提交 ===');
+    console.log('表单数据:', values);
+    
     try {
-      // 使用新的登录函数
+      // 使用登录函数
       const result = await login(values.username, values.password);
-
+      console.log('登录结果:', result);
+      
       if (result.success) {
-        // 登录成功日志
-        console.log('用户登录成功:', {
-          username: values.username,
-          timestamp: new Date().toISOString(),
-          userId: result.data?.user?.id
-        });
+        // 登录成功
+        console.log('登录成功，检查token是否保存');
+        // 确保token已经保存
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const token = localStorage.getItem('admin-auth-token');
+        console.log('localStorage中的token:', token);
         
-        // 显示成功消息并立即跳转，减少等待时间
         toast.success('登录成功');
-        // 使用 setTimeout 确保提示消息有时间显示
+        // 延迟跳转以显示成功消息
         setTimeout(() => {
-          router.replace('/admin/customers');
-        }, 100); // 100ms 延迟，让用户能看到成功消息
+          console.log('准备跳转到客户页面');
+          console.log('跳转前localStorage中的token:', localStorage.getItem('admin-auth-token'));
+          router.push('/admin/customers');
+        }, 100);
       } else {
-        // 登录失败日志
-        console.warn('用户登录失败:', {
-          username: values.username,
-          timestamp: new Date().toISOString(),
-          error: result.error
-        });
-        
+        // 登录失败
         toast.error(result.error || '登录失败，请检查用户名和密码');
+        setLoading(false);
       }
     } catch (error) {
-      // 网络错误日志
-      console.error('登录网络错误:', {
-        username: values.username,
-        timestamp: new Date().toISOString(),
-        error: error
-      });
-      
-      console.error('网络错误:', error);
+      // 网络错误
+      console.error('登录网络错误:', error);
       toast.error('网络错误，请稍后再试');
-    } finally {
       setLoading(false);
     }
   };
