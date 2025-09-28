@@ -237,16 +237,6 @@ export default function QuestionnairesPage() {
       render: (time: string) => new Date(time).toLocaleDateString(),
     },
     {
-      title: '状态',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'red'}>
-          {isActive ? '启用' : '禁用'}
-        </Tag>
-      ),
-    },
-    {
       title: '操作',
       key: 'action',
       render: (_: any, record: Questionnaire) => (

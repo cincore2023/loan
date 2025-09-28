@@ -66,6 +66,36 @@ interface Questionnaire {
   questionnaireName: string;
 }
 
+// 降级复制文本到剪贴板的函数
+const fallbackCopyTextToClipboard = (text: string) => {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  
+  // 避免滚动到底部
+  textArea.style.top = '0';
+  textArea.style.left = '0';
+  textArea.style.position = 'fixed';
+  textArea.style.opacity = '0';
+  
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  
+  try {
+    const successful = document.execCommand('copy');
+    if (successful) {
+      message.success('链接已复制到剪贴板');
+    } else {
+      message.error('复制失败');
+    }
+  } catch (err) {
+    console.error('复制命令失败:', err);
+    message.error('复制失败');
+  }
+  
+  document.body.removeChild(textArea);
+};
+
 export default function ChannelsPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
@@ -185,7 +215,10 @@ export default function ChannelsPage() {
     setEditingChannel(record);
     form.setFieldsValue({
       ...record,
-      tags: record.tags ? record.tags.join(', ') : ''
+      tags: record.tags ? record.tags.join(', ') : '',
+      // 确保状态字段正确设置
+      isActive: record.isActive !== undefined ? record.isActive : true,
+      isDefault: record.isDefault !== undefined ? record.isDefault : false
     });
     setIsModalVisible(true);
   };
@@ -235,6 +268,7 @@ export default function ChannelsPage() {
           remark: channel.remark,
           shortLink: channel.shortLink,
           tags: channel.tags,
+          isDefault: channel.isDefault, // 确保包含 isDefault 字段
           isActive: !currentStatus
         }),
       });
@@ -283,6 +317,17 @@ export default function ChannelsPage() {
   const handleSubmit = async (values: any) => {
     try {
       setLoading(true);
+      // 处理 tags 字段，将逗号分隔的字符串转换为数组
+      if (values.tags) {
+        values.tags = values.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0);
+      } else {
+        values.tags = [];
+      }
+      
+      // 确保布尔值字段正确设置
+      values.isActive = values.isActive !== undefined ? values.isActive : true;
+      values.isDefault = values.isDefault !== undefined ? values.isDefault : false;
+      
       if (editingChannel) {
         // 编辑渠道
         // 使用 authFetch 替代 fetch
@@ -473,9 +518,33 @@ export default function ChannelsPage() {
       dataIndex: 'shortLink',
       key: 'shortLink',
       render: (link: string) => (
-        <a href={link} target="_blank" rel="noopener noreferrer">
-          {link || '未设置'}
-        </a>
+        <Space>
+          <a href={link} target="_blank" rel="noopener noreferrer">
+            {link || '未设置'}
+          </a>
+          {link && (
+            <Button 
+              type="text" 
+              icon={<CopyOutlined />} 
+              onClick={(e) => {
+                e.stopPropagation();
+                // 首先尝试使用现代的 clipboard API
+                if (navigator.clipboard && window.isSecureContext) {
+                  navigator.clipboard.writeText(link).then(() => {
+                    message.success('短链接已复制到剪贴板');
+                  }).catch(err => {
+                    console.error('Clipboard API 失败:', err);
+                    // 如果 Clipboard API 失败，使用降级方案
+                    fallbackCopyTextToClipboard(link);
+                  });
+                } else {
+                  // 如果不支持 Clipboard API，直接使用降级方案
+                  fallbackCopyTextToClipboard(link);
+                }
+              }}
+            />
+          )}
+        </Space>
       ),
     },
     {
@@ -483,9 +552,33 @@ export default function ChannelsPage() {
       dataIndex: 'downloadLink',
       key: 'downloadLink',
       render: (link: string) => (
-        <a href={link} target="_blank" rel="noopener noreferrer">
-          {link || '未设置'}
-        </a>
+        <Space>
+          <a href={link} target="_blank" rel="noopener noreferrer">
+            {link || '未设置'}
+          </a>
+          {link && (
+            <Button 
+              type="text" 
+              icon={<CopyOutlined />} 
+              onClick={(e) => {
+                e.stopPropagation();
+                // 首先尝试使用现代的 clipboard API
+                if (navigator.clipboard && window.isSecureContext) {
+                  navigator.clipboard.writeText(link).then(() => {
+                    message.success('下载链接已复制到剪贴板');
+                  }).catch(err => {
+                    console.error('Clipboard API 失败:', err);
+                    // 如果 Clipboard API 失败，使用降级方案
+                    fallbackCopyTextToClipboard(link);
+                  });
+                } else {
+                  // 如果不支持 Clipboard API，直接使用降级方案
+                  fallbackCopyTextToClipboard(link);
+                }
+              }}
+            />
+          )}
+        </Space>
       ),
     },
     {
@@ -648,7 +741,6 @@ export default function ChannelsPage() {
             label="是否默认渠道"
             name="isDefault"
             valuePropName="checked"
-            initialValue={editingChannel ? editingChannel.isDefault : false}
           >
             <Switch
               checkedChildren="是"
@@ -682,10 +774,21 @@ export default function ChannelsPage() {
               <Tooltip title="复制链接">
                 <Button 
                   icon={<CopyOutlined />} 
-                  onClick={() => {
+                  onClick={(e) => {
                     if (generatedLink) {
-                      navigator.clipboard.writeText(generatedLink);
-                      message.success('链接已复制到剪贴板');
+                      // 首先尝试使用现代的 clipboard API
+                      if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(generatedLink).then(() => {
+                          message.success('链接已复制到剪贴板');
+                        }).catch(err => {
+                          console.error('Clipboard API 失败:', err);
+                          // 如果 Clipboard API 失败，使用降级方案
+                          fallbackCopyTextToClipboard(generatedLink);
+                        });
+                      } else {
+                        // 如果不支持 Clipboard API，直接使用降级方案
+                        fallbackCopyTextToClipboard(generatedLink);
+                      }
                     } else {
                       message.warning('没有可复制的链接');
                     }
@@ -711,7 +814,6 @@ export default function ChannelsPage() {
             label="是否启用"
             name="isActive"
             valuePropName="checked"
-            initialValue={editingChannel ? editingChannel.isActive : true}
           >
             <Switch
               checkedChildren="启用"
@@ -754,9 +856,35 @@ export default function ChannelsPage() {
               </div>
             </div>
             <p style={{ marginTop: 16 }}>
-              <a href={selectedChannel.shortLink} target="_blank" rel="noopener noreferrer">
-                {selectedChannel.shortLink}
-              </a>
+              <Space>
+                <a href={selectedChannel.shortLink} target="_blank" rel="noopener noreferrer">
+                  {selectedChannel.shortLink}
+                </a>
+                {selectedChannel.shortLink && (
+                  <Button 
+                    type="text" 
+                    icon={<CopyOutlined />} 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (selectedChannel.shortLink) {
+                        // 首先尝试使用现代的 clipboard API
+                        if (navigator.clipboard && window.isSecureContext) {
+                          navigator.clipboard.writeText(selectedChannel.shortLink).then(() => {
+                            message.success('短链接已复制到剪贴板');
+                          }).catch(err => {
+                            console.error('Clipboard API 失败:', err);
+                            // 如果 Clipboard API 失败，使用降级方案
+                            fallbackCopyTextToClipboard(selectedChannel.shortLink);
+                          });
+                        } else {
+                          // 如果不支持 Clipboard API，直接使用降级方案
+                          fallbackCopyTextToClipboard(selectedChannel.shortLink);
+                        }
+                      }
+                    }}
+                  />
+                )}
+              </Space>
             </p>
           </div>
         )}
