@@ -68,6 +68,8 @@ NODE_ENV=production
 JWT_SECRET=your-super-secret-jwt-secret-key-change-this-in-production
 ```
 
+**重要安全提醒**：请务必在生产环境中将 `JWT_SECRET` 更改为一个安全的随机字符串，不要使用默认值。
+
 ## 部署脚本
 
 项目提供了自动化部署脚本以简化部署过程：
