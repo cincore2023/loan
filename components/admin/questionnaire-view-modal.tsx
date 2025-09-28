@@ -11,6 +11,7 @@ import {
   Tag,
   Space
 } from 'antd';
+import { authFetch } from '@/libs/auth/auth-client';
 
 const { Title, Text } = Typography;
 
@@ -59,7 +60,7 @@ export default function QuestionnaireViewModal({
   const fetchQuestionnaire = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/questionnaires/${questionnaireId}`);
+      const response = await authFetch(`/api/admin/questionnaires/${questionnaireId}`);
       const data = await response.json();
       
       if (response.ok) {

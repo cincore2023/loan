@@ -14,6 +14,7 @@ import {
   Descriptions
 } from 'antd';
 import { formatCurrency, formatPhoneNumber, formatIdCard, formatDateTime } from '@/lib/utils';
+import { authFetch } from '@/libs/auth/auth-client';
 
 const { Title, Text } = Typography;
 
@@ -88,7 +89,7 @@ export default function CustomerQuestionViewModal({
   const fetchQuestionnaire = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/questionnaires/${customer?.questionnaireId}`);
+      const response = await authFetch(`/api/admin/questionnaires/${customer?.questionnaireId}`);
       const data = await response.json();
       
       if (response.ok) {
