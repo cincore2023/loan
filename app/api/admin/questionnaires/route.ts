@@ -3,6 +3,8 @@ import { db } from '@/libs/database/db';
 import { questionnaires } from '@/libs/database/schema';
 import { count, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { getAuthTokenFromRequest } from '@/libs/auth/auth-middleware';
+import { verifyToken } from '@/libs/auth/auth';
 
 // 定义问卷题选项的验证模式
 const questionOptionSchema = z.object({
@@ -25,7 +27,30 @@ const questionnaireSchema = z.object({
   questions: z.array(questionSchema).optional(),
 });
 
-export async function GET() {
+// 认证检查中间件
+async function authenticateRequest(request: NextRequest) {
+  const token = getAuthTokenFromRequest(request);
+  
+  if (!token) {
+    return NextResponse.json({ error: '未提供认证信息' }, { status: 401 });
+  }
+
+  try {
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: '无效的认证令牌' }, { status: 401 });
+    }
+    return null; // 认证成功
+  } catch (error) {
+    return NextResponse.json({ error: '认证失败' }, { status: 401 });
+  }
+}
+
+export async function GET(request: NextRequest) {
+  // 检查认证
+  const authResponse = await authenticateRequest(request);
+  if (authResponse) return authResponse;
+  
   try {
     // 获取问卷列表，按创建时间倒序排列
     const questionnaireList = await db.select().from(questionnaires).orderBy(desc(questionnaires.createdAt)).limit(100);
@@ -51,6 +76,10 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // 检查认证
+  const authResponse = await authenticateRequest(request);
+  if (authResponse) return authResponse;
+  
   try {
     const body = await request.json();
     
@@ -84,6 +113,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  // 检查认证
+  const authResponse = await authenticateRequest(request);
+  if (authResponse) return authResponse;
+  
   try {
     const body = await request.json();
     
@@ -131,6 +164,10 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  // 检查认证
+  const authResponse = await authenticateRequest(request);
+  if (authResponse) return authResponse;
+  
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

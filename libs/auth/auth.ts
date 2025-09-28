@@ -41,20 +41,20 @@ export async function verifyToken(token: string) {
  * 从请求中获取认证 token
  */
 export async function getAuthToken(request: NextRequest) {
-  // 首先尝试从 cookie 中获取 token
-  const cookieStore = await cookies();
-  const token = cookieStore.get('admin-auth-token')?.value;
-  
-  if (token) {
-    return token;
-  }
-  
-  // 如果 cookie 中没有 token，则尝试从 Authorization 头中获取
+  // 首先尝试从 Authorization 头中获取 token
   const authHeader = request.headers.get('authorization');
   
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const bearerToken = authHeader.substring(7);
     return bearerToken;
+  }
+  
+  // 如果 Authorization 头中没有 token，则尝试从 cookie 中获取（为了向后兼容）
+  const cookieStore = await cookies();
+  const token = cookieStore.get('admin-auth-token')?.value;
+  
+  if (token) {
+    return token;
   }
   
   return null;

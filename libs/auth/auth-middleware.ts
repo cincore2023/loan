@@ -26,19 +26,7 @@ export async function verifyTokenInMiddleware(token: string) {
  * 从请求中获取认证 token (中间件版本)
  */
 export function getAuthTokenFromRequest(request: NextRequest) {
-  // 首先尝试从 cookie 中获取 token
-  const cookieHeader = request.headers.get('cookie');
-  if (cookieHeader) {
-    const cookies = cookieHeader.split(';').map(cookie => cookie.trim());
-    const authTokenCookie = cookies.find(cookie => cookie.startsWith('admin-auth-token='));
-    if (authTokenCookie) {
-      const token = authTokenCookie.split('=')[1];
-      console.log('中间件 - 从cookie中获取的token:', token);
-      return token;
-    }
-  }
-  
-  // 如果 cookie 中没有 token，则尝试从 Authorization 头中获取
+  // 首先尝试从 Authorization 头中获取 token
   const authHeader = request.headers.get('authorization');
   
   if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -47,6 +35,21 @@ export function getAuthTokenFromRequest(request: NextRequest) {
     return bearerToken;
   }
   
+  // 如果 Authorization 头中没有 token，则尝试从 cookie 中获取（为了向后兼容）
+  const cookieHeader = request.headers.get('cookie');
+  if (cookieHeader) {
+    // 解析cookie字符串
+    const cookies = cookieHeader.split(';').map(cookie => cookie.trim());
+    const authTokenCookie = cookies.find(cookie => cookie.startsWith('admin-auth-token='));
+    if (authTokenCookie) {
+      // 提取token值（处理可能存在的URL编码）
+      const token = decodeURIComponent(authTokenCookie.split('=')[1]);
+      console.log('中间件 - 从cookie中获取的token:', token);
+      return token;
+    }
+  }
+  
+  console.log('中间件 - 未找到认证token');
   return null;
 }
 

@@ -46,23 +46,15 @@ export async function POST(request: NextRequest) {
     // 更新最后登录时间
     await db.update(admins).set({ lastLoginAt: new Date() }).where(eq(admins.id, adminUser[0].id));
     
-    // 创建响应
+    // 创建响应，返回token而不是设置cookie
     const response = NextResponse.json({
       message: '登录成功',
+      token: token, // 返回token给客户端
       user: {
         id: adminUser[0].id,
         name: adminUser[0].name,
       }
     }, { status: 200 });
-    
-    // 使用Next.js的cookies API设置cookie
-    response.cookies.set('admin-auth-token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60, // 1小时
-      path: '/',
-      sameSite: 'strict',
-    });
     
     return response;
     
