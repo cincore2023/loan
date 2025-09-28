@@ -35,6 +35,12 @@ export default function Register() {
       return;
     }
     
+    // 检查渠道是否活跃
+    if (storedChannelInfo.isActive === false) {
+      setError('当前渠道暂不可用，请联系客服或选择其他渠道');
+      return;
+    }
+    
     setChannelInfo(storedChannelInfo);
     setQuestionnaire(storedQuestionnaire);
     setChannelId(storedChannelId);
@@ -51,6 +57,12 @@ export default function Register() {
     // 只验证申请额度和手机号
     if (!applicationAmount || !phoneNumber) {
       toast.error('请填写申请额度和手机号');
+      return;
+    }
+    
+    // 再次检查渠道状态
+    if (channelInfo && channelInfo.isActive === false) {
+      toast.error('当前渠道暂不可用，请联系客服或选择其他渠道');
       return;
     }
     

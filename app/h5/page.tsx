@@ -25,6 +25,11 @@ export default function H5Home() {
           const defaultChannelData = await defaultChannelResponse.json();
           
           if (defaultChannelResponse.ok && defaultChannelData.channel) {
+            // 检查默认渠道是否活跃
+            if (defaultChannelData.channel.isActive === false) {
+              setError('当前渠道暂不可用');
+              return;
+            }
             finalChannelId = defaultChannelData.channel.id;
           } else {
             // 如果API获取失败，回退到硬编码的默认值
@@ -37,6 +42,12 @@ export default function H5Home() {
         const data = await response.json();
         
         if (response.ok) {
+          // 检查渠道是否活跃
+          if (data.channel && data.channel.isActive === false) {
+            setError('当前渠道暂不可用');
+            return;
+          }
+          
           // 将问卷数据存储到store中
           h5Store.setData('channelInfo', data.channel);
           h5Store.setData('questionnaire', data.questionnaire);
@@ -99,7 +110,7 @@ export default function H5Home() {
             />
           </div>
         </div>
-        <div className="my-[15px] mb-[25px] mx-0 w-full text-center z-10 text-red-500">错误: {error}</div>
+        <div className="my-[15px] mb-[25px] mx-0 w-full text-center z-10 text-red-500">{error}</div>
       </div>
     );
   }

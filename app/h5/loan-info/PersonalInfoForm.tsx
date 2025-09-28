@@ -64,8 +64,7 @@ export default function PersonalInfoForm({ customerId, onSubmit, onCancel }: Per
       return;
     }
 
-    // 显示提交中的toast
-    const toastId = toast.loading('资料提交中...');
+    // 不再在这里显示toast，由父组件统一管理
     setLoading(true);
     
     try {
@@ -77,13 +76,11 @@ export default function PersonalInfoForm({ customerId, onSubmit, onCancel }: Per
         district,
       });
       
-      // 更新toast为成功状态
-      toast.success('资料提交成功', { id: toastId });
       // 标记为已提交
       setIsSubmitted(true);
     } catch (err) {
       console.error('Failed to submit personal info:', err);
-      toast.error('提交失败，请稍后再试', { id: toastId });
+      // 错误处理也由父组件统一管理
     } finally {
       setLoading(false);
     }
@@ -100,9 +97,6 @@ export default function PersonalInfoForm({ customerId, onSubmit, onCancel }: Per
 
   return (
     <div className="fixed inset-0 bg-white z-50 flex flex-col">
-      {/* Toast容器 */}
-      <Toaster position="top-center" />
-      
       {/* 顶部进度条和信息 */}
       <div className="p-4">
         <div className="w-full bg-gray-200 rounded-full h-2.5">

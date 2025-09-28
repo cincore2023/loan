@@ -30,6 +30,7 @@ export async function GET() {
         channelName: channelData.channelName,
         shortLink: channelData.shortLink,
         isDefault: channelData.isDefault,
+        isActive: channelData.isActive, // 添加渠道活跃状态
       }
     });
   } catch (error) {

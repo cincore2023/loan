@@ -118,6 +118,7 @@ export default function LoanInfo() {
           province: data.province,
           city: data.city,
           district: data.district,
+          submissionTime: new Date().toISOString(), // 添加提交时间
           selectedQuestions: selectedQuestions,
           channelId: channelId || channelInfo?.id || '' // 传递渠道ID
         }),
@@ -146,6 +147,7 @@ export default function LoanInfo() {
       }
     } catch (err) {
       console.error('Failed to submit personal info:', err);
+      // 显示错误消息
       toast.error('提交失败，请稍后再试');
     }
   };

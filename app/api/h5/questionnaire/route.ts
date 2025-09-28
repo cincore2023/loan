@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
         channelNumber: channelData.channelNumber,
         channelName: channelData.channelName,
         shortLink: channelData.shortLink,
+        isActive: channelData.isActive, // 添加渠道活跃状态
       },
       questionnaire: {
         id: questionnaireData.id,
